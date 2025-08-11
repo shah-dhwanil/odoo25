@@ -2,11 +2,13 @@ from typing import Optional
 from uuid import UUID
 
 import asyncpg
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, UploadFile, status
+from uuid_utils import uuid7
 
 from app.base.exception_handler import http_exception_handler
 from app.base.exceptions import HTTPException
 from app.database import PgPool
+from app.minio import MinioClient
 from app.products.exceptions import (
     InsufficientQuantity,
     InvalidPriceConfiguration,
@@ -285,3 +287,22 @@ async def get_price_for_rental_unit(
                 error=e,
             )
         )
+
+
+@router.post("/upload_images")
+async def upload_images(
+    file: UploadFile,
+):
+    file_id = str(uuid7())
+    client = MinioClient.get_client()
+    await client.put_object(
+        bucket_name="products",
+        object_name=file_id,
+        data=file,
+        length=file.size,
+        content_type=file.content_type,
+        metadata={
+            "file_name": file.filename,
+        },
+    )
+    return {"id": file_id}

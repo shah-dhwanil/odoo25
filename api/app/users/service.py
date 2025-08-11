@@ -4,6 +4,15 @@ from uuid import UUID
 import asyncpg
 from structlog import get_logger
 
+from app.base.schemas import Address
+from app.customers.models import Addresses, CreateCustomer
+from app.customers.service import CustomerService
+from app.delivery_partner.models import CreateDeliveryPartner
+from app.delivery_partner.repository import DeliveryPartnerRepository
+from app.delivery_partner.service import DeliveryPartnerService
+from app.shop_owner.models import BankDetails, CreateShopOwner
+from app.shop_owner.repository import ShopOwnerRepository
+from app.shop_owner.service import ShopOwnerService
 from app.utils.argon2 import hash_password, verify_password
 from app.utils.paseto import generate_token
 
@@ -48,7 +57,55 @@ class UserService:
 
             # Create user in database
             user_in_db = await self.repository.create_user(user_with_hashed_password)
-
+            if user_in_db.user_type == UserType.CUSTOMER:
+                await CustomerService(
+                    connection=self.repository.connection
+                ).create_customer(
+                    CreateCustomer(
+                        id=user_in_db.id,
+                        name=user_with_hashed_password.name,
+                        address=Addresses(
+                            address={
+                                "temp": Address(
+                                    street="",
+                                    city="",
+                                    state="",
+                                    country="",
+                                    pincode="396001",
+                                )
+                            }
+                        ),
+                    )
+                )
+            elif user_in_db.user_type == UserType.DELIVERY_PARTNER:
+                await DeliveryPartnerService(
+                    DeliveryPartnerRepository(self.repository.connection)
+                ).create_delivery_partner(
+                    CreateDeliveryPartner(
+                        id=user_in_db.id,
+                        name=user_with_hashed_password.name,
+                        address=Address(
+                            street="", city="", state="", country="", pincode="396001"
+                        ),
+                    )
+                )
+            elif user_in_db.user_type == UserType.SHOP_OWNER:
+                await ShopOwnerService(
+                    ShopOwnerRepository(self.repository.connection)
+                ).create_shop_owner(
+                    CreateShopOwner(
+                        id=user_in_db.id,
+                        name=user_with_hashed_password.name,
+                        owner_name="",
+                        gst_no="24AAAAA0000H1Z0",
+                        address=Address(
+                            street="", city="", state="", country="", pincode="396001"
+                        ),
+                        bank_details=BankDetails(
+                            account_number="", ifsc_code="", bank_name="", branch=""
+                        ),
+                    )
+                )
             # Return public response (without password)
             return UserResponse(
                 id=user_in_db.id,

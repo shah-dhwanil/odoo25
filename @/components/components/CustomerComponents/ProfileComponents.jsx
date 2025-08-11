@@ -10,8 +10,9 @@ export default function ProfileComponents({ user }) {
     name: user.name,
     email: user.email,
     phone: user.phone,
-    address: "123 Main St, City, State 12345",
+    address: "street city pincode state country",
   });
+  console.log(formData);
 
   const handleSave = () => {
     // Normally you’d save to a backend here

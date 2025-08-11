@@ -118,3 +118,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Smooth scrolling for in-page anchors like /#about, /#reviews, /#contact */
+html {
+  scroll-behavior: smooth;
+}

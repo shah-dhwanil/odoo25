@@ -4,6 +4,7 @@ import "./main";
 import ProductPage from "./pages/ProductPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import AllProduct from "./pages/CustomerPage/AllProduct";
+import ShopOwnerDashboard from "../@/components/components/OwnerComponent/ShopOwnerDashboardProps";
 
 
 
@@ -21,6 +22,10 @@ const App = () => {
         {/* customer */}
         <Route path="/Customer" element={<AllProduct />} />
         <Route path="/Customer-products/:id" element={<ProductDetailPage />} />
+
+
+        {/* Delivery */}
+         <Route path="/shop-owner" element={<ShopOwnerDashboard />} />
       </Routes>
     </Router>
   );

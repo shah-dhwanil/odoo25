@@ -12,6 +12,7 @@ import CustomerDashboard from "../../@/components/components/CustomerComponents/
 // import ShopOwnerDashboard from "../../@/components/components/HomeComponent/ShopOwnerDashboard";
 import DeliveryPartnerDashboard from "../../@/components/components/CustomerComponents/CustomerDashboard";
 import LoginPopup from "../../@/components/components/LoginComponents/LoginPopup";
+import ShopOwnerDashboard from "../../@/components/components/OwnerComponent/ShopOwnerDashboardProps";
 
 export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -28,10 +29,18 @@ export default function HomePage() {
     setUser(null);
     setIsLoggedIn(false);
   };
+  const dummyUser = {
+    shopName: "Tech Gear Rentals",
+    name: "John Doe",
+    email: "john@example.com",
+    phone: "+1 234 567 890",
+    role: "Shop Owner",
+  };
+
 
   if (isLoggedIn && user) {
     if (user.role === "shop_owner") {
-      return <ShopOwnerDashboard user={user} onLogout={handleLogout} />;
+      return <ShopOwnerDashboard user={dummyUser} onLogout={handleLogout} />;
     } else if (user.role === "delivery_partner") {
       return <DeliveryPartnerDashboard user={user} onLogout={handleLogout} />;
     } else {

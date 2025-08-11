@@ -13,6 +13,7 @@ apply = [
     CREATE TABLE IF NOT EXISTS deliveries(
         id uuid,
         order_id uuid NOT NULL,
+        delivery_type DeliveryType NOT NULL,
         delivery_partner_id UUID NOT NULL,
         ratings INTEGER,
         CONSTRAINT pk_deliveries PRIMARY KEY(id),

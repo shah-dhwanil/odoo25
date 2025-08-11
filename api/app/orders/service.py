@@ -297,3 +297,7 @@ class OrderService:
             return PaymentStatus.PARTIAL
         else:
             return PaymentStatus.FULL
+
+    async def get_order_by_shop_owner(self, shop_owner: UUID) -> ListOrder:
+        """Get orders by shop owner with pagination"""
+        return await self.repository.get_order_by_shop_owner(shop_owner)

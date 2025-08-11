@@ -269,3 +269,15 @@ class OrderRepository:
             created_at=row["created_at"],
             updated_at=row["updated_at"],
         )
+
+    async def get_order_by_shop_owner(self, shop_owner: UUID):
+        query = """
+        SELECT * FROM orders 
+        WHERE product_id IN (
+            SELECT id FROM products WHERE owner_id = $1
+        )
+        ORDER BY created_at DESC
+        """
+        rows = await self.connection.fetch(query, shop_owner)
+        orders = [self._row_to_order(row) for row in rows]
+        return ListOrder(orders=orders)

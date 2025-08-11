@@ -116,6 +116,15 @@ async def get_orders_by_product(
     return await service.get_orders_by_product(product_id, limit=limit, offset=offset)
 
 
+@router.get("/shops/{shop_owner}", response_model=ListOrder)
+async def get_orders_by_shop_owner(
+    shop_owner: UUID,
+    service: OrderService = Depends(get_order_service),
+) -> ListOrder:
+    """Get orders for a specific shop owner."""
+    return await service.get_order_by_shop_owner(shop_owner)
+
+
 @router.get("/status/{status}", response_model=ListOrder)
 async def get_orders_by_status(
     status: OrderStatus,

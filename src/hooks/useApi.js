@@ -101,6 +101,39 @@ export const useSimpleApi = () => {
   };
 };
 
+// Simple auth functions using the API
+// Simple login function
+export const login = async ({ email_id, password }) => {
+  const res = await fetch(`${API_BASE_URL}/users/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email_id, password })
+  });
+  
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.detail?.[0]?.msg || 'Login failed');
+  }
+  
+  return res.json();
+};
+
+// Simple signup function
+export const signup = async ({ email_id, mobile_no, user_type, name, password }) => {
+  const res = await fetch(`${API_BASE_URL}/users/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email_id, mobile_no, user_type, name, password })
+  });
+  
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.detail?.[0]?.msg || 'Signup failed');
+  }
+  
+  return res.json();
+};
+
 // Usage Examples:
 /*
 const MyComponent = () => {

@@ -5,12 +5,15 @@ import { Input } from "../../ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
 import { X, Mail, Lock, User, Phone, Building } from "lucide-react";
+import { login, signup } from "../../../../src/hooks/useApi";
 
 const listA=["shop owner","customer","delivery partner"]
 
 
 function LoginPopup({ onClose, onLogin }) {
   const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -22,44 +25,80 @@ function LoginPopup({ onClose, onLogin }) {
     gstNo: "",
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
 
-    let userData;
+    try {
+      if (isLogin) {
+        // Login API call
+        const response = await login({
+          email_id: formData.email,
+          password: formData.password
+        });
 
-    if (formData.role === "shop_owner") {
-      userData = {
-        id: 1,
-        name: isLogin ? "John Smith" : formData.name,
-        email: formData.email,
-        phone: isLogin ? "+1 (555) 987-6543" : formData.phone,
-        role: "shop_owner",
-        shopName: isLogin ? "Premium Rentals Co." : formData.shopName,
-        address: isLogin
-          ? "456 Business Ave, Suite 200, City, State 12345"
-          : formData.address,
-        gstNo: isLogin ? "GST123456789" : formData.gstNo,
-        joinDate: "2023-03-15",
-        totalProducts: 45,
-        totalRentals: 234,
-        rating: 4.7,
-        totalRevenue: 125000,
-      };
-    } else {
-      userData = {
-        id: 2,
-        name: isLogin ? "Jane Doe" : formData.name,
-        email: formData.email,
-        phone: isLogin ? "+1 (555) 123-4567" : formData.phone,
-        role: "customer",
-        joinDate: "2024-01-15",
-        totalBookings: 12,
-        activeBookings: 2,
-        address: "123 Main St, City, State 12345",
-      };
+        // Store auth data
+        if (response.access_token) {
+          localStorage.setItem('access_token', response.access_token);
+          localStorage.setItem('user_id', response.user_id);
+          localStorage.setItem('user_role', response.role);
+        }
+
+        // Create user data for the app state
+        const userData = {
+          id: response.user_id,
+          email: formData.email,
+          role: response.role,
+          // Add other user data as needed
+        };
+
+        onLogin(userData);
+      } else {
+        // Signup API call
+        const userTypeMap = {
+          "customer": "CUSTOMER",
+          "shop_owner": "SHOP_OWNER", 
+          "delivery_partner": "DELIVERY_PARTNER"
+        };
+
+        const signupData = {
+          email_id: formData.email,
+          mobile_no: formData.phone,
+          user_type: userTypeMap[formData.role],
+          name: formData.name,
+          password: formData.password
+        };
+
+        const response = await signup(signupData);
+        
+        // After successful signup, automatically login
+        const loginResponse = await login({
+          email_id: formData.email,
+          password: formData.password
+        });
+
+        if (loginResponse.access_token) {
+          localStorage.setItem('access_token', loginResponse.access_token);
+          localStorage.setItem('user_id', loginResponse.user_id);
+          localStorage.setItem('user_role', loginResponse.role);
+        }
+
+        const userData = {
+          id: loginResponse.user_id,
+          email: formData.email,
+          name: formData.name,
+          phone: formData.phone,
+          role: loginResponse.role,
+        };
+
+        onLogin(userData);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-
-    onLogin(userData);
   };
 
   return (
@@ -207,14 +246,27 @@ function LoginPopup({ onClose, onLogin }) {
               <Button
                 type="submit"
                 className="w-full bg-teal-600 hover:bg-teal-700"
+                disabled={loading}
               >
-                {isLogin ? "Sign In" : "Create Account"}
+                {loading 
+                  ? (isLogin ? "Signing in..." : "Creating account...") 
+                  : (isLogin ? "Sign In" : "Create Account")
+                }
               </Button>
+
+              {error && (
+                <div className="text-red-600 text-sm text-center mt-2">
+                  {error}
+                </div>
+              )}
             </form>
 
             <div className="mt-4 text-center">
               <button
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setError(""); // Clear error when switching modes
+                }}
                 className="text-teal-600 hover:text-teal-700 text-sm"
               >
                 {isLogin

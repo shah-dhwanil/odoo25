@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.categories.controller import router as categories_router
 from app.lifespan import lifespan
 from app.middleware import ContextMiddleware, LoggingMiddleware, RequestIDMiddleware
 from app.users.controller import router as users_router
@@ -22,6 +23,7 @@ def create_app():
 
     # Include routers
     app.include_router(users_router)
+    app.include_router(categories_router)
 
     @app.get("/")
     async def health_check():

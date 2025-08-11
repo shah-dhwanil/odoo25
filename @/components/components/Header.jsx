@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { Menu, X, LogIn } from "lucide-react";
 
 export default function Header() {

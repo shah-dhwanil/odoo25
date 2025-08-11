@@ -1,7 +1,9 @@
-from typing import ClassVar, Optional
-from asyncpg import Pool, create_pool
-from .config import Config
 from json import dumps, loads
+from typing import ClassVar, Optional
+
+from asyncpg import Pool, create_pool
+
+from .config import Config
 
 
 class PgPool:
@@ -20,11 +22,11 @@ class PgPool:
                 decoder=loads,
                 schema="pg_catalog",
             )
-        
+
         cls.pool = await create_pool(
             user=config.POSTGRES_USERNAME,
             password=config.POSTGRES_PWD,
-            database=config.POSTGRES_DB, 
+            database=config.POSTGRES_DB,
             host=config.POSTGRES_HOST_ADDRESS,
             port=config.POSTGRES_PORT,
             min_size=config.POSTGRES_MIN_CONNECTIONS,
@@ -36,9 +38,12 @@ class PgPool:
     async def get_connection(cls):
         if cls.pool is None:
             raise Exception("Pool not initiated")
-        client = await cls.pool.acquire()
-        yield client
-        await cls.pool.release(client)
+        try:
+            client = await cls.pool.acquire()
+            yield client
+        except Exception:
+            await cls.pool.release(client)
+            raise
 
     @classmethod
     async def close(cls):

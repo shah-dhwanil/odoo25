@@ -13,11 +13,11 @@ export default function Header() {
 const navigate = useNavigate();
 
   const navItems = [
-    { name: "Home", href: "/" },
-    { name: "About", href: "/about" },
-    { name: "Products", href: "/products" },
-    { name: "Reviews", href: "/reviews" },
-    { name: "Contact", href: "/contact" },
+  { name: "Home", href: "/" },
+  { name: "About", href: "/#about" },
+  { name: "Products", href: "/products" },
+  { name: "Reviews", href: "/#reviews" },
+  { name: "Contact", href: "/#contact" },
   ];
 
   const handleLogin = (userData) => {

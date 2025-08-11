@@ -1,18 +1,22 @@
 import React, { useState } from "react";
 import { format, differenceInDays } from "date-fns";
-import { Star, ShoppingCart, CalendarIcon, Shield, Truck, Clock, Check, Store } from "lucide-react";
+import { Star, ShoppingCart, Shield, Truck, Clock, Check, Store } from "lucide-react";
 
 import { Button } from "../../ui/button";
 import { Card, CardContent } from "../../ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
 import { Calendar } from "../../ui/calendar";
 import { Badge } from "../../ui/badge";
+import { Popover, PopoverTrigger, PopoverContent } from "../../ui/popover";
+import { TimePicker } from "../../ui/time-picker";
 
 export default function ProductDetailView({ product, onBack, onShopSelect, onAddToCart }) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [pricingType, setPricingType] = useState("daily");
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("17:00");
   const [quantity, setQuantity] = useState(1);
   const [showStartCalendar, setShowStartCalendar] = useState(false);
   const [showEndCalendar, setShowEndCalendar] = useState(false);
@@ -186,58 +190,54 @@ export default function ProductDetailView({ product, onBack, onShopSelect, onAdd
 
               {/* Date Selection */}
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Start Date</label>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowStartCalendar(!showStartCalendar)}
-                    className="w-full justify-start"
-                    aria-label="Select start date"
-                  >
-                    <CalendarIcon className="w-4 h-4 mr-2" />
-                    {startDate ? format(startDate, "MMM dd, yyyy") : "Select start date"}
-                  </Button>
-                  {showStartCalendar && (
-                    <div className="mt-2 border rounded-lg p-2 bg-white shadow">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Start Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button className="w-full p-3 text-left border border-gray-300 rounded-md hover:border-gray-400 focus:ring-2 focus:ring-[#00786f] focus:border-[#00786f]">
+                        {startDate ? startDate.toDateString() : "Select start date"}
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" side="bottom" align="center" sideOffset={8}>
                       <Calendar
-                        mode="single"
                         selected={startDate}
-                        onSelect={(date) => {
-                          setStartDate(date);
-                          setShowStartCalendar(false);
-                          if (endDate && date > endDate) setEndDate(null); // reset endDate if before startDate
-                        }}
-                        disabled={(date) => date < new Date()}
+                        onSelect={setStartDate}
                       />
-                    </div>
-                  )}
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">End Date</label>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowEndCalendar(!showEndCalendar)}
-                    className="w-full justify-start"
-                    disabled={!startDate}
-                    aria-label="Select end date"
-                  >
-                    <CalendarIcon className="w-4 h-4 mr-2" />
-                    {endDate ? format(endDate, "MMM dd, yyyy") : "Select end date"}
-                  </Button>
-                  {showEndCalendar && (
-                    <div className="mt-2 border rounded-lg p-2 bg-white shadow">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">End Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button className="w-full p-3 text-left border border-gray-300 rounded-md hover:border-gray-400 focus:ring-2 focus:ring-[#00786f] focus:border-[#00786f]">
+                        {endDate ? endDate.toDateString() : "Select end date"}
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" side="bottom" align="center" sideOffset={8}>
                       <Calendar
-                        mode="single"
                         selected={endDate}
-                        onSelect={(date) => {
-                          setEndDate(date);
-                          setShowEndCalendar(false);
-                        }}
-                        disabled={(date) => date < (startDate || new Date())}
+                        onSelect={setEndDate}
                       />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Time Selection (separate fields, stacked) */}
+                <div className="mt-4 space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Start Time</label>
+                    <div className="border border-gray-300 rounded-md p-2">
+                      <TimePicker value={startTime} onChange={setStartTime} />
                     </div>
-                  )}
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">End Time</label>
+                    <div className="border border-gray-300 rounded-md p-2">
+                      <TimePicker value={endTime} onChange={setEndTime} />
+                    </div>
+                  </div>
                 </div>
               </div>
 

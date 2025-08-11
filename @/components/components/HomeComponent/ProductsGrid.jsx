@@ -112,7 +112,7 @@ export default function ProductsGrid({ onAddToCart }) {
   const [pricingFilter, setPricingFilter] = useState("daily");
   const [sortBy, setSortBy] = useState("name");
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const navigate=useNavigate();
+  const navigate = useNavigate();
 
   const filteredProducts = useMemo(() => {
     const filtered = allProducts.filter((product) => {
@@ -207,7 +207,7 @@ export default function ProductsGrid({ onAddToCart }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <div className="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300" onClick={()=>navigate(`/products/${product.id}`)}>
+            <div className="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300" onClick={() => navigate(`/products/${product.id}`)}>
               <div className="relative">
                 <img
                   src={product.image || "/placeholder.png"}
@@ -216,11 +216,10 @@ export default function ProductsGrid({ onAddToCart }) {
                 />
                 <div className="absolute top-4 right-4">
                   <span
-                    className={`text-xs px-2 py-1 rounded-full ${
-                      product.availability === "Available"
+                    className={`text-xs px-2 py-1 rounded-full ${product.availability === "Available"
                         ? "bg-green-100 text-green-800"
                         : "bg-yellow-100 text-yellow-800"
-                    }`}
+                      }`}
                   >
                     {product.availability}
                   </span>
@@ -233,11 +232,16 @@ export default function ProductsGrid({ onAddToCart }) {
                 </p>
                 <p className="text-slate-600 text-sm mb-3">{product.description}</p>
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400 mr-1" />
-                    <span className="text-sm text-slate-600">
-                      {product.rating} ({product.reviews})
-                    </span>
+                  <div className="flex justify-between w-full align-middle">
+                    <div className="flex">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400 mr-1" />
+                      <span className="text-sm text-slate-600">
+                        {product.rating} ({product.reviews})
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-end">4 available</span>
+                    </div>
                   </div>
                 </div>
                 <button

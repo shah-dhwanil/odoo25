@@ -177,7 +177,9 @@ export default function MyProducts({ user }) {
                 <tr className="border-b border-slate-200">
                   <th className="text-left py-3 px-4 font-semibold text-slate-700">Product</th>
                   <th className="text-left py-3 px-4 font-semibold text-slate-700">Category</th>
-                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Quantity</th>
+                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Total Quantity</th>
+                   <th className="text-left py-3 px-4 font-semibold text-slate-700">Available Quantity</th>
+                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Rented Quantity</th>
                   <th className="text-left py-3 px-4 font-semibold text-slate-700">Daily Rate</th>
                   <th className="text-left py-3 px-4 font-semibold text-slate-700">Status</th>
                   <th className="text-left py-3 px-4 font-semibold text-slate-700">Actions</th>
@@ -202,6 +204,12 @@ export default function MyProducts({ user }) {
                       </div>
                     </td>
                     <td className="py-4 px-4 text-slate-600">{product.category}</td>
+                    <td className="py-4 px-4">
+                      <span className="font-semibold text-slate-800">{product.quantity}</span>
+                    </td>
+                    <td className="py-4 px-4">
+                      <span className="font-semibold text-slate-800">{product.quantity}</span>
+                    </td>
                     <td className="py-4 px-4">
                       <span className="font-semibold text-slate-800">{product.quantity}</span>
                     </td>

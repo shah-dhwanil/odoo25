@@ -6,6 +6,7 @@ from app.customers.controller import router as customers_router
 from app.delivery_partner.controller import router as delivery_partner_router
 from app.lifespan import lifespan
 from app.middleware import ContextMiddleware, LoggingMiddleware, RequestIDMiddleware
+from app.products.controller import router as products_router
 from app.shop_owner.controller import router as shop_owner_router
 from app.users.controller import router as users_router
 
@@ -30,6 +31,7 @@ def create_app():
     app.include_router(shop_owner_router)
     app.include_router(customers_router)
     app.include_router(delivery_partner_router)
+    app.include_router(products_router)
 
     @app.get("/")
     async def health_check():

@@ -39,6 +39,7 @@ class UserService:
 
             # Create a new UserCreate object with hashed password
             user_with_hashed_password = UserCreate(
+                name=user_data.name,
                 email_id=user_data.email_id,
                 mobile_no=user_data.mobile_no,
                 user_type=user_data.user_type,
@@ -134,7 +135,9 @@ class UserService:
             user_payload = UserPayload(id=user.id, role=user.user_type)
             token = generate_token(user_payload.model_dump_json())
             # Return user response (without password)
-            return UserAuthResponse(access_token=token, role=user.user_type)
+            return UserAuthResponse(
+                access_token=token, role=user.user_type, user_id=user.id
+            )
 
         except UserNotFoundException:
             # Re-raise as the same exception for security (don't reveal if email exists)

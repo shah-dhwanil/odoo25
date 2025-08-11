@@ -26,6 +26,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     """Schema for creating a new user"""
 
+    name: str
     password: str = Field(
         ..., min_length=8, max_length=500, description="User's password"
     )
@@ -87,3 +88,4 @@ class UserPayload(BaseModel):
 class UserAuthResponse(BaseModel):
     access_token: str
     role: UserType
+    user_id: UUID = Field(..., description="User's unique identifier")

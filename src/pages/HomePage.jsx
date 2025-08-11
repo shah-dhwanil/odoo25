@@ -1,12 +1,12 @@
 "use client"
-import Header from "@/components/header"
-import Hero from "@/components/hero"
-import Categories from "@/components/categories"
-import About from "@/components/about"
-import FeaturedProducts from "@/components/featured-products"
-import Stats from "@/components/stats"
-import Reviews from "@/components/reviews"
-import Footer from "@/components/footer"
+import Header from "../../@/components/components/HomeComponent/Header"
+import Hero from "../../@/components/components/HomeComponent/Hero"
+import Categories from "../../@/components/components/HomeComponent/Categories"
+import About from "../../@/components/components/HomeComponent/About"
+import FeaturedProducts from "../../@/components/components/HomeComponent/FeaturedProducts"
+import Stats from "../../@/components/components/HomeComponent/Stats"
+import Reviews from "../../@/components/components/HomeComponent/Reviews"
+import Footer from "../../@/components/components/HomeComponent/Footer"
 
 export default function HomePage() {
   return (

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Button } from "../../@/components/components/HomeComponent/Hero";
+import { Button } from "../../ui/button";
 import { ArrowRight } from "lucide-react";
 
 export default function Hero() {

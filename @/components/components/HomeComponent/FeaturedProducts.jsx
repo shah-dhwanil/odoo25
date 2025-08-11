@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
-import ProductCard from "@/components/product-card";
-import { Button } from "@/components/ui/button";
+import ProductCard from "../HomeComponent/ProductCard";
+import { Button } from "../../ui/button";
 
 export default function FeaturedProducts() {
   const featuredProducts = [

@@ -1,18 +1,29 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
 import { Menu, X, LogIn } from "lucide-react";
+import LoginPopup from "../LoginComponents/LoginPopup"; 
+import { useNavigate } from "react-router-dom";
+
+
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+const navigate = useNavigate();
 
   const navItems = [
     { name: "Home", href: "#home" },
     { name: "About", href: "#about" },
-    { name: "Products", href: "/products" },
+    { name: "Products", href: "products" },
     { name: "Reviews", href: "#reviews" },
     { name: "Contact", href: "#contact" },
   ];
+
+  const handleLogin = (userData) => {
+    console.log("Logged in user:", userData);
+    setShowLogin(false);
+  };
 
   return (
     <header className="bg-white shadow-lg sticky top-0 z-50">
@@ -23,7 +34,7 @@ export default function Header() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
-            className="flex items-center"
+            className="flex items-center cursor-pointer" onClick={()=>navigate("/")}
           >
             <div className="w-10 h-10 bg-gradient-to-r from-slate-800 to-teal-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-xl">R</span>
@@ -54,7 +65,10 @@ export default function Header() {
             transition={{ duration: 0.5 }}
             className="hidden md:block"
           >
-            <Button className="bg-teal-600 hover:bg-teal-700 text-white">
+            <Button
+              className="bg-teal-600 hover:bg-teal-700 text-white"
+              onClick={() => setShowLogin(true)}
+            >
               <LogIn className="w-4 h-4 mr-2" />
               Login
             </Button>
@@ -85,7 +99,13 @@ export default function Header() {
                   {item.name}
                 </a>
               ))}
-              <Button className="bg-teal-600 hover:bg-teal-700 text-white w-fit">
+              <Button
+                className="bg-teal-600 hover:bg-teal-700 text-white w-fit"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  setShowLogin(true);
+                }}
+              >
                 <LogIn className="w-4 h-4 mr-2" />
                 Login
               </Button>
@@ -93,6 +113,11 @@ export default function Header() {
           </motion.div>
         )}
       </div>
+
+      {/* Login Popup */}
+      {showLogin && (
+        <LoginPopup onClose={() => setShowLogin(false)} onLogin={handleLogin} />
+      )}
     </header>
   );
 }

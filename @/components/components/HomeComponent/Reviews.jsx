@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import ReviewCard from "@/components/review-card";
+import { Button } from "../../ui/button";
+import ReviewCard from "../HomeComponent/ReviewCard";
 
 export default function Reviews() {
   const [currentIndex, setCurrentIndex] = useState(0);

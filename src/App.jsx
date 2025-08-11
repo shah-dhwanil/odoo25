@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import "./main";
-import LoginPage from "./pages/LoginPage";
-import SignUpPage from "./pages/SignUpPage";
+import ProductPage from "./pages/ProductPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
 
 
 
@@ -13,8 +13,11 @@ const App = () => {
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/Signup" element={<SignUpPage />} />
+        <Route path="/products" element={<ProductPage/>}/>
+         <Route path="/products/:id" element={<ProductDetailPage />} />
+
+
+
       </Routes>
     </Router>
   );

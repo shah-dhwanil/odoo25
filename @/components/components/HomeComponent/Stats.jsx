@@ -1,4 +1,4 @@
-import React from "react";
+
 import { motion } from "framer-motion";
 import { Users, Package, Star, Clock } from "lucide-react";
 

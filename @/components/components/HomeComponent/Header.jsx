@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 
 
-export default function Header() {
+export default function Header({setShowLoginModal}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
 const navigate = useNavigate();
@@ -101,10 +101,7 @@ const navigate = useNavigate();
               ))}
               <Button
                 className="bg-teal-600 hover:bg-teal-700 text-white w-fit"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  setShowLogin(true);
-                }}
+                onClick={onClick={setShowLoginModal}}
               >
                 <LogIn className="w-4 h-4 mr-2" />
                 Login

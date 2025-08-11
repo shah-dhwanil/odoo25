@@ -37,7 +37,7 @@ apply = [
         amount_paid NUMERIC(10,2) NOT NULL,
         amount_due NUMERIC(10,2) NOT NULL,
         order_status OrderStatus NOT NULL,
-        payment_status OrderStatus NOT NULL,
+        payment_status PaymentStatus NOT NULL,
         delivery_photo_id UUID[] NOT NULL,
         pickup_photo_id UUID[] NOT NULL,
         ratings INTEGER,

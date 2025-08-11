@@ -302,6 +302,7 @@ export default function ProductDetailView({ product, onBack, onShopSelect, onAdd
                 </Button>
               </div>
 
+
               {/* Additional Info */}
               <div className="space-y-3 text-sm text-slate-600">
                 <div className="flex items-center space-x-2">

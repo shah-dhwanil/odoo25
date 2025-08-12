@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.categories.controller import router as categories_router
 from app.customers.controller import router as customers_router
+from app.deliveries.controller import router as deliveries_router
 from app.delivery_partner.controller import router as delivery_partner_router
 from app.lifespan import lifespan
 from app.middleware import ContextMiddleware, LoggingMiddleware, RequestIDMiddleware
@@ -34,6 +35,7 @@ def create_app():
     app.include_router(delivery_partner_router)
     app.include_router(products_router)
     app.include_router(orders_router)
+    app.include_router(deliveries_router)
 
     @app.get("/")
     async def health_check():

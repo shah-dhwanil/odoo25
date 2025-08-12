@@ -68,9 +68,9 @@ class DeliveryRepository:
         FROM deliveries
         WHERE order_id = $1
         """
-        row = await self.connection.fetchrow(query, order_id)
-        if row:
-            return Delivery(**row)
+        rows = await self.connection.fetch(query, order_id)
+        if rows:
+            return [Delivery(**row) for row in rows]
         raise DeliveryNotFound(context={"order_id": str(order_id)})
 
     async def update(self, delivery_id: UUID, delivery: UpdateDelivery) -> Delivery:

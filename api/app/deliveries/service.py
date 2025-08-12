@@ -27,7 +27,7 @@ class DeliveryService:
         """Get a delivery by ID."""
         return await self.repository.get_by_id(delivery_id)
 
-    async def get_delivery_by_order(self, order_id: UUID) -> Delivery:
+    async def get_delivery_by_order(self, order_id: UUID) -> list[Delivery]:
         """Get a delivery by order ID."""
         return await self.repository.get_by_order_id(order_id)
 

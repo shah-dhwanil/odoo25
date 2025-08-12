@@ -87,13 +87,14 @@ async def get_delivery(
         )
 
 
-@router.get("/order/{order_id}", response_model=Delivery)
+@router.get("/order/{order_id}", response_model=ListDelivery)
 async def get_delivery_by_order(
     order_id: UUID, service: DeliveryService = Depends(get_delivery_service)
-) -> Delivery:
+) -> ListDelivery:
     """Get a delivery by order ID."""
     try:
-        return await service.get_delivery_by_order(order_id)
+        res = await service.get_delivery_by_order(order_id)
+        return ListDelivery(deliveries=res)
     except DeliveryNotFound as e:
         return http_exception_handler(
             HTTPException(

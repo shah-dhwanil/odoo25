@@ -7,6 +7,7 @@ from app.base.exception_handler import http_exception_handler
 from app.base.exceptions import HTTPException
 from app.database import PgPool
 from app.orders.exceptions import (
+    DeliveryServiceNotAvailable,
     InsufficientPayment,
     InsufficientStock,
     InvalidDeliveryDates,
@@ -60,6 +61,13 @@ async def create_order(
         InvalidDeliveryDates,
         ProductNotAvailable,
     ) as e:
+        return http_exception_handler(
+            HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                error=e,
+            )
+        )
+    except DeliveryServiceNotAvailable as e:
         return http_exception_handler(
             HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -153,6 +161,13 @@ async def update_order_status(
             )
         )
     except InvalidOrderStatus as e:
+        return http_exception_handler(
+            HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                error=e,
+            )
+        )
+    except DeliveryServiceNotAvailable as e:
         return http_exception_handler(
             HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

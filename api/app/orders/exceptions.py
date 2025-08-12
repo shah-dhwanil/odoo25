@@ -131,3 +131,16 @@ class ProductNotAvailable(BaseException):
         *args: object,
     ) -> None:
         super().__init__(detail, context, *args)
+
+
+class DeliveryServiceNotAvailable(BaseException):
+    code = "DELIVERY_SERVICE_NOT_AVAILABLE"
+    title = "Delivery Service Not Available"
+
+    def __init__(
+        self,
+        detail: str = "No delivery service available for the specified locations",
+        context: Optional[dict[str, Any]] = None,
+        *args: object,
+    ) -> None:
+        super().__init__(detail, context, *args)

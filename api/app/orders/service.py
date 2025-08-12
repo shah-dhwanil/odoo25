@@ -1,7 +1,13 @@
 from datetime import timedelta
 from uuid import UUID
 
+from app.deliveries.models import CreateDelivery, DeliveryType
+from app.deliveries.repository import DeliveryRepository
+from app.deliveries.service import DeliveryService
+from app.delivery_partner.repository import DeliveryPartnerRepository
+from app.delivery_partner.service import DeliveryPartnerService
 from app.orders.exceptions import (
+    DeliveryServiceNotAvailable,
     InsufficientPayment,
     InsufficientStock,
     InvalidDeliveryDates,
@@ -61,7 +67,6 @@ class OrderService:
                 order.rent_end_date + timedelta(days=1)
             ) <= order_data.rent_start_date:
                 count += order.quantity
-        print(count)
         if count < order_data.quantity:
             raise InsufficientStock()
         item_total = order_data.quantity * product.price[order_data.rate]
@@ -77,6 +82,8 @@ class OrderService:
         )
         # TODO: add delivery records.
         res = await self.repository.create(order_data, amt)
+        if order_data.order_status == OrderStatus.CONFIRMED:
+            await self.assign_order_to_delivery_partner(res)
         return res
 
     async def get_orders(self, limit: int = 100, offset: int = 0) -> ListOrder:
@@ -124,6 +131,8 @@ class OrderService:
                     "requested_status": update_data.order_status,
                 },
             )
+        if update_data.order_status == OrderStatus.CONFIRMED:
+            await self.assign_order_to_delivery_partner(current_order)
         if update_data.order_status == OrderStatus.SHIPPED:
             await ProductService(connection=self.repository.connection).confirm_rental(
                 current_order.product_id, current_order.quantity
@@ -301,3 +310,32 @@ class OrderService:
     async def get_order_by_shop_owner(self, shop_owner: UUID) -> ListOrder:
         """Get orders by shop owner with pagination"""
         return await self.repository.get_order_by_shop_owner(shop_owner)
+
+    async def assign_order_to_delivery_partner(self, order_data):
+        partners = await DeliveryPartnerService(
+            DeliveryPartnerRepository(self.repository.connection)
+        ).get_delivery_partners()
+        drop_partner_id = None
+        pickup_partner_id = None
+        for partner in partners.delivery_partners:
+            if partner.address.pincode == order_data.delivery_location.pincode:
+                drop_partner_id = partner.id
+            if partner.address.pincode == order_data.pickup_location.pincode:
+                pickup_partner_id = partner.id
+        if drop_partner_id is None or pickup_partner_id is None:
+            raise DeliveryServiceNotAvailable()
+        repo = DeliveryService(DeliveryRepository(self.repository.connection))
+        await repo.create_delivery(
+            CreateDelivery(
+                delivery_partner_id=drop_partner_id,
+                order_id=order_data.id,
+                delivery_type=DeliveryType.DROP,
+            )
+        )
+        await repo.create_delivery(
+            CreateDelivery(
+                delivery_partner_id=pickup_partner_id,
+                order_id=order_data.id,
+                delivery_type=DeliveryType.PICKUP,
+            )
+        )

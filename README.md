@@ -1,12 +1,38 @@
-# React + Vite
+# Rental Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Team Segfault** - Odoo Hackathon 2025
 
-Currently, two official plugins are available:
+## 🎥 Demo Video
+[![Rental Management System Demo](https://img.youtube.com/vi/0J6QuiyV70Y/0.jpg)](https://youtu.be/0J6QuiyV70Y)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+[Watch our demo video](https://youtu.be/0J6QuiyV70Y)
 
-## Expanding the ESLint configuration
+## 📋 Overview
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+A comprehensive rental management system built for the Odoo Hackathon 2025. This system streamlines the rental process for businesses, providing features for inventory management, booking, customer management, and payment processing.
+
+## 🚀 Features
+
+- **Property/Item Management**: Add, edit, and manage rental inventory
+- **Customer Management**: Comprehensive customer profiles and history
+- **Booking System**: Real-time availability checking and reservation management
+- **Payment Processing**: Integrated payment handling and invoicing
+- **Dashboard Analytics**: Visual insights into rental performance
+- **File Management**: Document and image upload for rental items
+- **Secure Authentication**: Token-based authentication with PASETO
+- **Role-based Access Control**: Different permission levels for users
+
+## 🛠️ Tech Stack
+
+### Backend
+- **FastAPI** - Modern, fast web framework for building APIs
+- **PostgreSQL** - Robust relational database for data persistence
+- **MinIO** - S3-compatible object storage for file management
+- **Argon2** - Secure password hashing
+- **PASETO** - Platform-agnostic security tokens for authentication
+
+### Frontend
+- **React** - Modern JavaScript library for building user interfaces
+- **React Router** - Client-side routing
+- **Axios** - HTTP client for API communication
+- **Shadcn/Tailwind CSS** - UI component library and styling

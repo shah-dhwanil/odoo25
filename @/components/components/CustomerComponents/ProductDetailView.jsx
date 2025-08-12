@@ -8,7 +8,7 @@ import { Calendar } from "../../ui/calendar"
 import { Badge } from "../../ui/badge"
 import { Star, ShoppingCart, CalendarIcon, Shield, Truck, Clock, Check, Store } from "lucide-react"
 import { format, differenceInDays } from "date-fns"
-// import RentalPaymentModal from "@/components/rental-payment-modal"
+import RentalPaymentModal from "./RentalPaymentModal"
 
 export default function ProductDetailView({ product, onBack, onShopSelect, onAddToCart }) {
   const [selectedImage, setSelectedImage] = useState(0)
@@ -20,6 +20,7 @@ export default function ProductDetailView({ product, onBack, onShopSelect, onAdd
   const [showStartCalendar, setShowStartCalendar] = useState(false)
   const [showEndCalendar, setShowEndCalendar] = useState(false)
 
+  
   const calculateTotal = () => {
     if (!startDate || !endDate) return 0
 
@@ -43,10 +44,6 @@ export default function ProductDetailView({ product, onBack, onShopSelect, onAdd
   }
 
   const handleRentNow = () => {
-    if (!startDate || !endDate) {
-      alert("Please select rental dates")
-      return
-    }
     setShowPaymentModal(true)
   }
 
@@ -65,7 +62,7 @@ export default function ProductDetailView({ product, onBack, onShopSelect, onAdd
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
+
         {/* Product Images */}
         <div className="lg:col-span-5">
           <div className="space-y-4">
@@ -83,9 +80,8 @@ export default function ProductDetailView({ product, onBack, onShopSelect, onAdd
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`aspect-square bg-white rounded-lg overflow-hidden border-2 ${
-                    selectedImage === index ? "border-teal-600" : "border-slate-200"
-                  }`}
+                  className={`aspect-square bg-white rounded-lg overflow-hidden border-2 ${selectedImage === index ? "border-teal-600" : "border-slate-200"
+                    }`}
                 >
                   <img
                     src={image || "/placeholder.svg"}
@@ -116,9 +112,8 @@ export default function ProductDetailView({ product, onBack, onShopSelect, onAdd
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`w-5 h-5 ${
-                          i < Math.floor(product.rating) ? "fill-yellow-400 text-yellow-400" : "text-slate-300"
-                        }`}
+                        className={`w-5 h-5 ${i < Math.floor(product.rating) ? "fill-yellow-400 text-yellow-400" : "text-slate-300"
+                          }`}
                       />
                     ))}
                   </div>
@@ -175,7 +170,7 @@ export default function ProductDetailView({ product, onBack, onShopSelect, onAdd
         <div className="lg:col-span-3">
           <Card className="sticky top-4">
             <CardContent className="p-6 space-y-6">
-              
+
               {/* Pricing */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Rental Period</label>
@@ -246,6 +241,7 @@ export default function ProductDetailView({ product, onBack, onShopSelect, onAdd
                   )}
                 </div>
               </div>
+
 
               {/* Quantity */}
               <div>
@@ -327,18 +323,7 @@ export default function ProductDetailView({ product, onBack, onShopSelect, onAdd
         </div>
       </div>
 
-      {/* Payment Modal */}
-      {/* {showPaymentModal && (
-        <RentalPaymentModal
-          product={product}
-          quantity={quantity}
-          startDate={startDate}
-          endDate={endDate}
-          pricingType={pricingType}
-          total={calculateTotal()}
-          onClose={() => setShowPaymentModal(false)}
-        />
-      )} */}
+      
     </div>
   )
 }

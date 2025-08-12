@@ -50,6 +50,7 @@ export const useSimpleApi = () => {
       const response = await fetch(fullUrl, requestConfig);
 
       if (!response.ok) {
+        console.log(response.json())
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
@@ -109,13 +110,14 @@ export const login = async ({ email_id, password }) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email_id, password })
   });
-  
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err?.detail?.[0]?.msg || 'Login failed');
   }
   
-  return res.json();
+  const result= await res.json();
+    return result.data || result.detail || result;
+
 };
 
 // Simple signup function

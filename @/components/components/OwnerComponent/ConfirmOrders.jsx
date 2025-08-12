@@ -1,14 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Button } from "../../ui/button";
 import { Badge } from "../../ui/badge";
 import { CheckCircle, XCircle, Eye, Calendar, User, Phone, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import OrderDetailModal from "../../components/OwnerComponent/OrderDetailModalProps";
+import axios from "axios";
+import Cookies from 'js-cookie'
+import { backendurl } from "../../../../src/App";
 
 export default function ConfirmOrders({ user }) {
+    const token = Cookies.get("token");
+    const userId=localStorage.getItem('user_id')
   const [orders, setOrders] = useState([
     {
       id: 1,
@@ -109,6 +114,25 @@ export default function ConfirmOrders({ user }) {
   const pendingOrders = orders.filter((order) => order.status === "pending");
   const confirmedOrders = orders.filter((order) => order.status === "confirmed");
   const rejectedOrders = orders.filter((order) => order.status === "rejected");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const { data } = await axios.get(
+          `${backendurl}/orders/users/${userId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        console.log("kruda", data);
+
+      } catch (e) {
+        console.error("API fetch error:", e);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <div className="space-y-8">

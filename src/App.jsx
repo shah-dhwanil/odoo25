@@ -9,6 +9,7 @@ import ShopOwnerDashboard from "../@/components/components/OwnerComponent/ShopOw
 
 
 export const backendurl = import.meta.env.VITE_BACKEND_URL
+export const fileUrl = import.meta.env.VITE_FILE_URL
 
 const App = () => {
   return (

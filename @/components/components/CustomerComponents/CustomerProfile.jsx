@@ -1,192 +1,220 @@
-import React, { useState } from "react";
-import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
-import { User, Mail, Phone, MapPin, Edit, Save, X } from "lucide-react";
+import React, { useEffect, useState } from "react"
+import { motion } from "framer-motion"
+import { User, Package, Calendar, LogOut, ShoppingCart } from "lucide-react"
+import ProductsGrid from "../../components/CustomerComponents/ProductsGrid"
+import CustomerProfile from "../../components/CustomerComponents/CustomerProfile"
+import BookingHistory from "../../components/CustomerComponents/BookingHistory"
+import Cart from "../CustomerComponents/Cart"
+import ProductDetailView from "../../components/CustomerComponents/ProductDetailView"
+import ShopDetailView from "../CustomerComponents/ShopDetailView"
+import ProfileComponents from "./ProfileComponents"
+import axios from "axios"
+import { backendurl } from "../../../../src/App"
+import Cookies from 'js-cookie'
+import { useNavigate } from "react-router-dom"
 
-export default function CustomerProfile({ user }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    name: user.name,
-    email: user.email,
-    phone: user.phone,
-    address: "123 Main St, City, State 12345",
+export default function CustomerDashboard({ user }) {
+  const [activeTab, setActiveTab] = useState("products")
+  const [cartItems, setCartItems] = useState([])
+  const [selectedProduct, setSelectedProduct] = useState(null)
+  const [selectedShop, setSelectedShop] = useState(null)
+  const [AllProduct, setProduct] = useState([]);
+  const [userData, setUserData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    joinDate: new Date().toISOString(),
+    totalBookings: 0,
+    activeBookings: 0
   });
+  const token = Cookies.get('token');
+  const userid = localStorage.getItem('user_id')
+  const navigate = useNavigate();
 
-  const handleSave = () => {
-    // Normally you’d save to a backend here
-    setIsEditing(false);
-  };
+  const addToCart = (product, quantity, dates, pricing) => {
+    const cartItem = {
+      id: Date.now(),
+      product,
+      quantity,
+      dates,
+      pricing,
+      total: quantity * pricing.price * dates.days,
+    }
+    setCartItems((prev) => [...prev, cartItem])
+  }
+
+  const removeFromCart = (itemId) => {
+    setCartItems((prev) => prev.filter((item) => item.id !== itemId))
+  }
+
+  const handleProductSelect = (product) => {
+    setSelectedProduct(product)
+    setActiveTab("product-detail")
+  }
+
+  const handleShopSelect = (shop) => {
+    setSelectedShop(shop)
+    setActiveTab("shop-detail")
+  }
+
+  const tabs = [
+    { id: "products", label: "Browse Products", icon: Package },
+    { id: "bookings", label: "My Bookings", icon: Calendar },
+    { id: "profile", label: "Profile", icon: User },
+  ]
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch user data
+        const u_data = await axios.get(`${backendurl}/users/${userid}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        // Extract and set complete user data
+        const apiUserData = u_data.data;
+        setUserData({
+          name: apiUserData.name || apiUserData.username || 'User',
+          email: apiUserData.email || '',
+          phone: apiUserData.phone || apiUserData.phoneNumber || '',
+          address: apiUserData.address || '123 Main St, City, State 12345',
+          joinDate: apiUserData.joinDate || apiUserData.createdAt || new Date().toISOString(),
+          totalBookings: apiUserData.totalBookings || 0,
+          activeBookings: apiUserData.activeBookings || 0
+        });
+
+        // Fetch products data
+        const data = await axios.get(`${backendurl}/products/`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+        const result = data.data;
+        setProduct(result.products)
+
+        console.log('User data:', apiUserData);
+      } catch (e) {
+        console.log('Error:', e.response?.data || e.message);
+        // Set default values if API fails
+        setUserData({
+          name: 'User',
+          email: '',
+          phone: '',
+          address: '123 Main St, City, State 12345',
+          joinDate: new Date().toISOString(),
+          totalBookings: 0,
+          activeBookings: 0
+        });
+      }
+    }
+    fetchData();
+  }, [])
+
+  console.log(AllProduct);
+  
+  const onLogout = () => {
+    navigate('/')
+    Cookies.remove("token");
+    localStorage.removeItem("role")
+    localStorage.removeItem("user_id")
+  }
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-800 mb-2">My Profile</h1>
-        <p className="text-slate-600">Manage your account information</p>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-slate-800 to-teal-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-xl">R</span>
+              </div>
+              <span className="ml-2 text-xl font-bold text-slate-800">RentalPro</span>
+              <span className="ml-4 text-sm text-slate-500">Customer Portal</span>
+            </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Profile Information */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Personal Information</CardTitle>
-              <Button
-                variant="outline"
-                onClick={() => setIsEditing(!isEditing)}
-                className="flex items-center"
+            <nav className="hidden md:flex items-center space-x-8">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === tab.id
+                    ? "bg-teal-100 text-teal-700"
+                    : "text-slate-600 hover:text-slate-800 hover:bg-gray-100"
+                    }`}
+                >
+                  <tab.icon className="w-4 h-4 mr-2" />
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+
+            <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <p className="text-sm text-slate-600">Welcome back,</p>
+                <p className="font-semibold text-slate-800">{userData.name}</p>
+                {userData.email && <p className="text-xs text-slate-500">{userData.email}</p>}
+                {userData.phone && <p className="text-xs text-slate-500">{userData.phone}</p>}
+              </div>
+              <button
+                onClick={onLogout}
+                className="flex items-center px-3 py-2 border rounded-md text-slate-600 hover:text-slate-800"
               >
-                {isEditing ? (
-                  <>
-                    <X className="w-4 h-4 mr-2" />
-                    Cancel
-                  </>
-                ) : (
-                  <>
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit
-                  </>
-                )}
-              </Button>
-            </CardHeader>
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </button>
+            </div>
+          </div>
 
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Name */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Full Name
-                  </label>
-                  {isEditing ? (
-                    <Input
-                      value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
-                    />
-                  ) : (
-                    <div className="flex items-center p-3 bg-slate-50 rounded-md">
-                      <User className="w-5 h-5 text-slate-400 mr-3" />
-                      <span>{formData.name}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Email Address
-                  </label>
-                  {isEditing ? (
-                    <Input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
-                    />
-                  ) : (
-                    <div className="flex items-center p-3 bg-slate-50 rounded-md">
-                      <Mail className="w-5 h-5 text-slate-400 mr-3" />
-                      <span>{formData.email}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Phone */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Phone Number
-                  </label>
-                  {isEditing ? (
-                    <Input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) =>
-                        setFormData({ ...formData, phone: e.target.value })
-                      }
-                    />
-                  ) : (
-                    <div className="flex items-center p-3 bg-slate-50 rounded-md">
-                      <Phone className="w-5 h-5 text-slate-400 mr-3" />
-                      <span>{formData.phone}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Address */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Address
-                  </label>
-                  {isEditing ? (
-                    <Input
-                      value={formData.address}
-                      onChange={(e) =>
-                        setFormData({ ...formData, address: e.target.value })
-                      }
-                    />
-                  ) : (
-                    <div className="flex items-center p-3 bg-slate-50 rounded-md">
-                      <MapPin className="w-5 h-5 text-slate-400 mr-3" />
-                      <span>{formData.address}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {isEditing && (
-                <div className="flex justify-end">
-                  <Button
-                    onClick={handleSave}
-                    className="bg-teal-600 hover:bg-teal-700"
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Changes
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {/* Mobile Nav */}
+          <div className="md:hidden border-t pt-4 pb-2">
+            <nav className="flex space-x-4 overflow-x-auto">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${activeTab === tab.id
+                    ? "bg-teal-100 text-teal-700"
+                    : "text-slate-600 hover:text-slate-800 hover:bg-gray-100"
+                    }`}
+                >
+                  <tab.icon className="w-4 h-4 mr-2" />
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+          </div>
         </div>
+      </header>
 
-        {/* Account Stats */}
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Account Statistics</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center p-4 bg-teal-50 rounded-lg">
-                <div className="text-2xl font-bold text-teal-600">
-                  {user.totalBookings}
-                </div>
-                <div className="text-sm text-slate-600">Total Bookings</div>
-              </div>
-
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">
-                  {user.activeBookings}
-                </div>
-                <div className="text-sm text-slate-600">Active Rentals</div>
-              </div>
-
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">4.8</div>
-                <div className="text-sm text-slate-600">Average Rating</div>
-              </div>
-
-              <div className="text-center p-4 bg-purple-50 rounded-lg">
-                <div className="text-2xl font-bold text-purple-600">
-                  {new Date().getFullYear() -
-                    new Date(user.joinDate).getFullYear()}
-                </div>
-                <div className="text-sm text-slate-600">Years Member</div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {activeTab === "products" && (
+            <ProductsGrid onAddToCart={addToCart} onProductSelect={handleProductSelect} AllProduct={AllProduct} />
+          )}
+          {activeTab === "product-detail" && selectedProduct && (
+            <ProductDetailView
+              product={selectedProduct}
+              onBack={() => setActiveTab("products")}
+              onShopSelect={handleShopSelect}
+              onAddToCart={addToCart}
+            />
+          )}
+          {activeTab === "shop-detail" && selectedShop && (
+            <ShopDetailView shop={selectedShop} onBack={() => setActiveTab("products")} />
+          )}
+          {activeTab === "profile" && <ProfileComponents user={userData} />}
+          {activeTab === "bookings" && <BookingHistory user={userData} />}
+          {activeTab === "cart" && <Cart items={cartItems} onRemoveItem={removeFromCart} user={userData} />}
+        </motion.div>
       </div>
     </div>
-  );
+  )
 }

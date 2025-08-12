@@ -1,9 +1,12 @@
 // src/pages/ProductDetailPage.jsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Header from "../../@/components/components/HomeComponent/Header";
 import Footer from "../../@/components/components/HomeComponent/Footer";
 import ProductDetailView from "../../@/components/components/HomeComponent/ProductDetailView";
+import Cookies from 'js-cookie'
+import axios from "axios";
+import { backendurl } from "../App";
 
 // Mock product data - in real app, this would come from API
 const productData = {
@@ -119,8 +122,35 @@ const productData = {
 
 export default function ProductDetailPage() {
   const { id } = useParams();
-  const product = productData[id];
+  const [AllProduct, setAllProduct] = useState([]);
+  const [product, setProduct] = useState()
+  const token = Cookies.get('token');
   console.log(id);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await axios.get(`${backendurl}/products/`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+        const result = data.data;
+        setAllProduct(result.products)
+      } catch (e) {
+        console.log(e);
+      }
+
+    }
+    fetchData();
+  }, [])
+  useEffect(() => {
+    if (AllProduct.length > 0) {
+      const found = AllProduct.find(val => String(val.id) === String(id));
+      setProduct(found || null);
+    }
+  }, [AllProduct, id]);
+  console.log("data", product);
 
   if (!product) {
     return (

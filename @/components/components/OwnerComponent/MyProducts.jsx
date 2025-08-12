@@ -1,18 +1,24 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
 import { Button } from "../../ui/button"
 import { Badge } from "../../ui/badge"
 import { Eye, Edit, Package, DollarSign, Calendar } from "lucide-react"
 import ShopOwnerProductDetail from "./ShopOwnerProductDetail"
 import EditProductModal from "./EditProductModal"
+import Cookies from 'js-cookie'
+import axios from "axios"
+import { backendurl, fileUrl } from "../../../../src/App"
 
 export default function MyProducts({ user }) {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [editingProduct, setEditingProduct] = useState(null)
   const [showProductDetail, setShowProductDetail] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [Product, setProduct] = useState([]);
+  const userid = localStorage.getItem("user_id");
+  const token = Cookies.get("token");
 
   const [products] = useState([
     {
@@ -109,6 +115,54 @@ export default function MyProducts({ user }) {
     )
   }
 
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const resp = await axios.get(
+        `${backendurl}/products/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: {
+            owner_id: userid
+          }
+        }
+      );
+      const result = resp.data;
+      console.log("resdcfv", result);
+
+      // Use Promise.all to wait for all async operations to complete
+      const ordersWithNames = await Promise.all(
+        result.products.map(async (order) => {
+          try {
+            const productResp = await axios.get(
+              `${backendurl}/categories/${order.category_id}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
+            return {
+              ...order,
+              Cat_name: productResp.data.name
+            };
+          } catch (error) {
+            console.error(`Error fetching product ${order.product_id}:`, error);
+            return {
+              ...order,
+              name: "Product name unavailable"
+            };
+          }
+        })
+      );
+
+      // console.log("result orders with names: ", ordersWithNames);
+      setProduct(ordersWithNames)
+
+    }
+    fetchData();
+  }, [])
+
+  console.log(Product);
+
   return (
     <div className="space-y-8">
       <div>
@@ -123,7 +177,7 @@ export default function MyProducts({ user }) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-600">Total Products</p>
-                <p className="text-2xl font-bold text-slate-800">{products.length}</p>
+                <p className="text-2xl font-bold text-slate-800">{Product.length}</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Package className="w-6 h-6 text-blue-600" />
@@ -178,20 +232,19 @@ export default function MyProducts({ user }) {
                   <th className="text-left py-3 px-4 font-semibold text-slate-700">Product</th>
                   <th className="text-left py-3 px-4 font-semibold text-slate-700">Category</th>
                   <th className="text-left py-3 px-4 font-semibold text-slate-700">Total Quantity</th>
-                   <th className="text-left py-3 px-4 font-semibold text-slate-700">Available Quantity</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Rented Quantity</th>
-                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Daily Rate</th>
+                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Available Quantity</th>
+                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Rented Quantity</th>
                   <th className="text-left py-3 px-4 font-semibold text-slate-700">Status</th>
                   <th className="text-left py-3 px-4 font-semibold text-slate-700">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {products.map((product) => (
+                {Product.map((product) => (
                   <tr key={product.id} className="border-b border-slate-100 hover:bg-slate-50">
                     <td className="py-4 px-4">
                       <div className="flex items-center space-x-3">
                         <img
-                          src={product.image || "/placeholder.svg"}
+                          src={`${fileUrl}/products/${product.images_id[0]}`}
                           alt={product.name}
                           width={60}
                           height={45}
@@ -203,21 +256,19 @@ export default function MyProducts({ user }) {
                         </div>
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-slate-600">{product.category}</td>
+                    <td className="py-4 px-4 text-slate-600">{product.Cat_name}</td>
                     <td className="py-4 px-4">
-                      <span className="font-semibold text-slate-800">{product.quantity}</span>
+                      <span className="font-semibold text-slate-800">{product.total_quantity}</span>
                     </td>
                     <td className="py-4 px-4">
-                      <span className="font-semibold text-slate-800">{product.quantity}</span>
+                      <span className="font-semibold text-slate-800">{product.available_quantity}</span>
                     </td>
                     <td className="py-4 px-4">
-                      <span className="font-semibold text-slate-800">{product.quantity}</span>
+                      <span className="font-semibold text-slate-800">{product.rented_quantity}</span>
                     </td>
+                   
                     <td className="py-4 px-4">
-                      <span className="font-semibold text-teal-600">${product.pricing.daily}</span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <Badge className={getAvailabilityColor(product.availability)}>{product.availability}</Badge>
+                      <Badge className={getAvailabilityColor("Available")}>Available</Badge>
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex space-x-2">

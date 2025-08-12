@@ -1,88 +1,204 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
 import { Button } from "../../ui/button"
 import { Input } from "../../ui/input"
 import { Textarea } from "../../ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select"
 import { Plus, Package, DollarSign, X } from "lucide-react"
+import { backendurl } from "../../../../src/App"
+import axios from "axios"
+import Cookies from 'js-cookie'
 
 export default function AddProducts({ user }) {
+  const userid = localStorage.user_id;
+  const token = Cookies.get('token');
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    category: "",
-    totalQuantity: "",
-    hourlyPrice: "",
-    dailyPrice: "",
-    weeklyPrice: "",
-    monthlyPrice: "",
-    yearlyPrice: "",
-    damagePrice: "",
-    dueReturnPercentage: "",
+    category_id: "",
+    owner_id: userid,
+    rental_units: ["PER_HOUR", "PER_WEEK", "PER_DAY", "PER_YEAR", "PER_MONTH"],
+    price: {
+      // "PER_HOUR": 0,
+      // "PER_WEEK": 0,
+      // "PER_DAY": 0,
+      // "PER_YEAR": 0,
+      // "PER_MONTH": 0
+    },
+    total_quantity: 0,
+    defect_charges: 0.0,
+    security_deposit: 0.0,
+    care_instruction: "",
     images: [],
   })
+
   console.log(formData);
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const categories = [
-    "Construction Equipment",
-    "Event Furniture",
-    "Audio Visual",
-    "Party Supplies",
-    "Sports Equipment",
-    "Camping Gear",
-    "Transportation",
-    "Entertainment",
-    "Catering Equipment",
-  ]
+  const [categories, setCategories] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    console.log("Product added:", formData)
-    resetForm()
-    setIsSubmitting(false)
-    alert("Product added successfully!")
-  }
+  // Map between form field names and backend keys
+  const pricingMap = {
+    hourlyPrice: "PER_HOUR",
+    dailyPrice: "PER_DAY",
+    weeklyPrice: "PER_WEEK",
+    monthlyPrice: "PER_MONTH",
+    yearlyPrice: "PER_YEAR"
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await axios.get(`${backendurl}/categories/`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+        setCategories(data.data.categories)
+      } catch (e) {
+        console.log(e);
+      }
+    }
+    fetchData();
+  }, [])
 
   const handleInputChange = (field, value) => {
-    setFormData({ ...formData, [field]: value })
-  }
+    if (pricingMap[field]) {
+      const rentalKey = pricingMap[field];
+      setFormData((prev) => {
+        const updatedPrice = { ...prev.price, [rentalKey]: Number(value) };
 
-  const handleFilesChange = (files) => {
-    const fileArray = Array.from(files)
-    setFormData((prev) => ({
-      ...prev,
-      images: [...prev.images, ...fileArray],
+        const updatedRentalUnits = Object.keys(updatedPrice).filter(
+          (unit) => updatedPrice[unit] > 0
+        );
+
+        return {
+          ...prev,
+          price: updatedPrice,
+          rental_units: updatedRentalUnits,
+          [field]: value
+        };
+      });
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [field]: value
+      }));
+    }
+  };
+
+  // const handleFilesChange = (files) => {
+  //   const fileArray = Array.from(files);
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     images: [...prev.images, ...fileArray],
+  //   }));
+  // };
+
+  const handleFilesChange = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const fileArray = Array.from(files);
+    const uploadedFileIds = [];
+
+    for (const file of fileArray) {
+      const fileData = new FormData();
+      fileData.append("file", file);
+
+      try {
+        const response = await axios.post(
+          `${backendurl}/products/upload_images`,
+          fileData,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+
+        console.log(response.data);
+        uploadedFileIds.push(response.data.id);
+      } catch (error) {
+        console.error(`Upload failed for ${file.name}`, error);
+      }
+    }
+
+    setFormData((prev)=>({
+        ...prev,images:[...prev.images,...uploadedFileIds]
     }))
-  }
 
+
+    // Update form state after all uploads
+    // setFormData((prev) => ({
+    //   ...prev,
+    //   images: [...prev.images],       // Store file objects locally
+    //   uploadedFileIds: [...(prev.uploadedFileIds || []), ...uploadedFileIds], // Store uploaded IDs
+    // }));
+  };
+
+console.log(formData);
   const removeImage = (index) => {
     setFormData((prev) => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index),
-    }))
-  }
+    }));
+  };
 
   const resetForm = () => {
     setFormData({
       name: "",
       description: "",
-      category: "",
-      totalQuantity: "",
-      hourlyPrice: "",
-      dailyPrice: "",
-      weeklyPrice: "",
-      monthlyPrice: "",
-      yearlyPrice: "",
-      damagePrice: "",
-      dueReturnPercentage: "",
+      category_id: "",
+      owner_id: userid,
+      rental_units: [],
+      price: {
+        "PER_HOUR": 0,
+        "PER_WEEK": 0,
+        "PER_DAY": 0,
+        "PER_YEAR": 0,
+        "PER_MONTH": 0
+      },
+      total_quantity: "",
+      defect_charges: "",
+      security_deposit: 0,
+      care_instruction: "",
       images: [],
-    })
-  }
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const data = await axios.post(`${backendurl}/products/`,
+        {
+          "name": formData.name,
+          "description": formData.description,
+          "category_id": formData.category_id,
+          "owner_id": formData.owner_id,
+          "rental_units": formData.rental_units,
+          "price": formData.price,
+          "security_deposit": formData.security_deposit,
+          "defect_charges": formData.defect_charges,
+          "care_instruction": formData.care_instruction,
+          "total_quantity": formData.total_quantity,
+          "images_id": formData.images
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      console.log("Product added:", data);
+      resetForm();
+      alert("Product added successfully!");
+    } catch (e) {
+      console.log(e);
+    }
+    setIsSubmitting(false);
+  };
 
   return (
     <div className="space-y-8">
@@ -164,16 +280,16 @@ export default function AddProducts({ user }) {
                   Category *
                 </label>
                 <Select
-                  value={formData.category}
-                  onValueChange={(value) => handleInputChange("category", value)}
+                  value={formData.category_id}
+                  onValueChange={(value) => handleInputChange("category_id", value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
+                    {categories?.map((category) => (
+                      <SelectItem key={category.id} value={category.id.toString()}>
+                        {category.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -200,8 +316,8 @@ export default function AddProducts({ user }) {
               </label>
               <Input
                 type="number"
-                value={formData.totalQuantity}
-                onChange={(e) => handleInputChange("totalQuantity", e.target.value)}
+                value={formData.total_quantity}
+                onChange={(e) => handleInputChange("total_quantity", e.target.value)}
                 placeholder="Enter total quantity available"
                 min="1"
                 required
@@ -212,10 +328,16 @@ export default function AddProducts({ user }) {
             <div>
               <h3 className="text-lg font-semibold text-slate-800 mb-4">Pricing (per unit)</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {["Hourly", "Daily", "Weekly", "Monthly", "Yearly"].map((period) => (
-                  <div key={period}>
+                {[
+                  { label: "Hourly", field: "hourlyPrice" },
+                  { label: "Daily", field: "dailyPrice" },
+                  { label: "Weekly", field: "weeklyPrice" },
+                  { label: "Monthly", field: "monthlyPrice" },
+                  { label: "Yearly", field: "yearlyPrice" },
+                ].map(({ label, field }) => (
+                  <div key={field}>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      {period} Rate *
+                      {label} Rate *
                     </label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
@@ -223,15 +345,12 @@ export default function AddProducts({ user }) {
                       </span>
                       <Input
                         type="number"
-                        value={formData[`${period.toLowerCase()}Price`]}
-                        onChange={(e) =>
-                          handleInputChange(`${period.toLowerCase()}Price`, e.target.value)
-                        }
+                        value={formData[field] || ""}
+                        onChange={(e) => handleInputChange(field, e.target.value)}
                         placeholder="0.00"
                         className="pl-8"
                         step="0.01"
                         min="0"
-                        required
                       />
                     </div>
                   </div>
@@ -253,45 +372,34 @@ export default function AddProducts({ user }) {
                     </span>
                     <Input
                       type="number"
-                      value={formData.damagePrice}
-                      onChange={(e) => handleInputChange("damagePrice", e.target.value)}
+                      value={formData.defect_charges}
+                      onChange={(e) => handleInputChange("defect_charges", e.target.value)}
                       placeholder="0.00"
                       className="pl-8"
-                      step="0.01"
+                      step="1.0"
                       min="0"
-                      required
                     />
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Charge for damages to the product
-                  </p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Due Return Percentage *
+                    Security Deposit *
                   </label>
                   <div className="relative">
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
-                      %
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
+                      $
                     </span>
                     <Input
                       type="number"
-                      value={formData.dueReturnPercentage}
-                      onChange={(e) =>
-                        handleInputChange("dueReturnPercentage", e.target.value)
-                      }
-                      placeholder="0"
-                      className="pr-8"
-                      step="0.1"
+                      value={formData.security_deposit}
+                      onChange={(e) => handleInputChange("security_deposit", e.target.value)}
+                      placeholder="0.00"
+                      className="pl-8"
+                      step="1"
                       min="0"
-                      max="100"
-                      required
                     />
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Percentage charge for late returns
-                  </p>
                 </div>
               </div>
             </div>
@@ -307,9 +415,7 @@ export default function AddProducts({ user }) {
                   accept="image/*"
                   multiple
                   onChange={(e) => {
-                    if (e.target.files?.length) {
-                      handleFilesChange(e.target.files)
-                    }
+                      handleFilesChange(e);
                   }}
                   className="hidden"
                   id="image-upload"

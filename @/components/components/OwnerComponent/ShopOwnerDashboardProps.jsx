@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Button } from "../../ui/button"
 import { Home, CheckCircle, Plus, CreditCard, LogOut } from "lucide-react"
@@ -9,9 +9,18 @@ import ConfirmOrders from "./ConfirmOrders"
 import AddProducts from "./AddProducts"
 import MonitorPayments from "./MonitorPayments"
 import MyProducts from "./MyProducts"
+import { useNavigate } from "react-router-dom"
+import Cookies from 'js-cookie'
+import axios from "axios"
+import { backendurl } from "../../../../src/App"
 
 export default function ShopOwnerDashboard({ user }) {
   const [activeTab, setActiveTab] = useState("dashboard")
+  const navigate = useNavigate();
+  const token = Cookies.get("token");
+  const userId=localStorage.getItem('user_id')
+  const [ownerName,setOwnerName]=useState({});
+  const [UserName,setUserName]=useState([]);
   const dummyUser = {
     shopName: "HeavyRent Equipment Rentals",
     name: "David Miller",
@@ -23,8 +32,14 @@ export default function ShopOwnerDashboard({ user }) {
     totalRentals: 87,
     rating: 4.7,
     totalRevenue: 154300, // number so .toLocaleString() works
-  };
-
+  }; 
+  const onLogout = () => {
+    console.log(onLogout);
+    navigate('/')
+    Cookies.remove("token");
+    localStorage.removeItem("role")
+    localStorage.removeItem("user_id")
+  }
 
 
   const tabs = [
@@ -34,6 +49,40 @@ export default function ShopOwnerDashboard({ user }) {
     { id: "payments", label: "Monitor Payments", icon: CreditCard },
     { id: "Product", label: "Product", icon: CreditCard },
   ]
+
+
+  useEffect(() => {
+  
+    const fetchData = async () => {
+      try {
+        const { data } = await axios.get(
+          `${backendurl}/shop-owners/${userId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        console.log("res", data);
+        setOwnerName(data)
+
+
+         const response = await axios.get(
+          `${backendurl}/users/${userId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        // setOwnerName(data)
+        const result=response.data;
+        setUserName(result)
+        console.log("res", result);
+
+      } catch (e) {
+        console.error("API fetch error:", e);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -72,7 +121,7 @@ export default function ShopOwnerDashboard({ user }) {
               </div> */}
               <Button
                 variant="outline"
-                // onClick={onLogout}
+                onClick={onLogout}
                 className="text-slate-600 hover:text-slate-800 bg-transparent shadow-2xl"
               >
                 <LogOut className="w-4 h-4 mr-2" />
@@ -108,7 +157,7 @@ export default function ShopOwnerDashboard({ user }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          {activeTab === "dashboard" && <ShopOwnerDashboardHome user={dummyUser} />}
+          {activeTab === "dashboard" && <ShopOwnerDashboardHome user={dummyUser} UserName={UserName} ownerName={ownerName} />}
           {activeTab === "orders" && <ConfirmOrders user={user} />}
           {activeTab === "products" && <AddProducts user={dummyUser} />}
           {activeTab === "payments" && <MonitorPayments user={user} />}

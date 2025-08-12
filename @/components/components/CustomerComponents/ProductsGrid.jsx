@@ -7,99 +7,7 @@ import { Button } from "../../ui/button";
 import { Search, Star } from "lucide-react";
 import BookingModal from "../CustomerComponents/BookingHistory";
 import { useNavigate } from "react-router-dom";
-
-const allProducts = [
-  {
-    id: 1,
-    name: "Excavator CAT 320",
-    category: "Construction Equipment",
-    description: "Heavy-duty excavator perfect for large construction projects and earthmoving.",
-    image: "/construction-excavator.png",
-    rating: 4.8,
-    reviews: 124,
-    availability: "Available",
-    pricing: {
-      hourly: { price: 25, label: "$25/hour" },
-      daily: { price: 180, label: "$180/day" },
-      weekly: { price: 1100, label: "$1,100/week" },
-    },
-  },
-  {
-    id: 2,
-    name: "Wedding Banquet Tables",
-    category: "Event Furniture",
-    description: "Elegant round tables perfect for weddings and formal events, seats 8-10 people.",
-    image: "/elegant-event-furniture.png",
-    rating: 4.9,
-    reviews: 89,
-    availability: "Available",
-    pricing: {
-      hourly: { price: 3, label: "$3/hour" },
-      daily: { price: 15, label: "$15/day" },
-      weekly: { price: 85, label: "$85/week" },
-    },
-  },
-  {
-    id: 3,
-    name: "Professional Sound System",
-    category: "Audio Visual",
-    description: "Complete PA system with wireless microphones and mixing console.",
-    image: "/placeholder.svg?height=300&width=400&text=Sound+System",
-    rating: 4.7,
-    reviews: 156,
-    availability: "Available",
-    pricing: {
-      hourly: { price: 15, label: "$15/hour" },
-      daily: { price: 95, label: "$95/day" },
-      weekly: { price: 550, label: "$550/week" },
-    },
-  },
-  {
-    id: 4,
-    name: "Party Tent 20x30",
-    category: "Party Supplies",
-    description: "Large outdoor tent perfect for parties, weddings, and corporate events.",
-    image: "/party-tent-decorations.png",
-    rating: 4.6,
-    reviews: 203,
-    availability: "Limited",
-    pricing: {
-      hourly: { price: 20, label: "$20/hour" },
-      daily: { price: 120, label: "$120/day" },
-      weekly: { price: 700, label: "$700/week" },
-    },
-  },
-  {
-    id: 5,
-    name: "Soccer Goal Set",
-    category: "Sports Equipment",
-    description: "Professional soccer goals with nets, perfect for tournaments and training.",
-    image: "/sports-equipment-soccer-basketball.png",
-    rating: 4.5,
-    reviews: 67,
-    availability: "Available",
-    pricing: {
-      hourly: { price: 5, label: "$5/hour" },
-      daily: { price: 25, label: "$25/day" },
-      weekly: { price: 140, label: "$140/week" },
-    },
-  },
-  {
-    id: 6,
-    name: "Camping Package Deluxe",
-    category: "Camping Gear",
-    description: "Complete camping setup including tent, sleeping bags, and cooking equipment.",
-    image: "/camping-gear-setup.png",
-    rating: 4.8,
-    reviews: 145,
-    availability: "Available",
-    pricing: {
-      hourly: { price: 8, label: "$8/hour" },
-      daily: { price: 65, label: "$65/day" },
-      weekly: { price: 380, label: "$380/week" },
-    },
-  },
-];
+import { fileUrl } from "../../../../src/App"
 
 const categories = [
   "All Categories",
@@ -111,20 +19,24 @@ const categories = [
   "Camping Gear",
 ];
 
-export default function ProductsGrid({ onAddToCart, onProductSelect }) {
+export default function ProductsGrid({ onAddToCart, onProductSelect, AllProduct = [] }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
-  const [pricingFilter, setPricingFilter] = useState("daily");
+  const [pricingFilter, setPricingFilter] = useState("PER_HOUR");
   const [sortBy, setSortBy] = useState("name");
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const navigate=useNavigate();
+  const navigate = useNavigate();
 
   const filteredProducts = useMemo(() => {
-    const filtered = allProducts.filter((product) => {
+    const filtered = AllProduct.filter((product) => {
       const matchesSearch =
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === "All Categories" || product.category === selectedCategory;
+        product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesCategory =
+        selectedCategory === "All Categories" ||
+        product.category_name === selectedCategory ||
+        product.category_id === selectedCategory;
 
       return matchesSearch && matchesCategory;
     });
@@ -132,31 +44,34 @@ export default function ProductsGrid({ onAddToCart, onProductSelect }) {
     filtered.sort((a, b) => {
       switch (sortBy) {
         case "price-low":
-          return a.pricing[pricingFilter].price - b.pricing[pricingFilter].price;
+          return (a.price?.[pricingFilter] || 0) - (b.price?.[pricingFilter] || 0);
         case "price-high":
-          return b.pricing[pricingFilter].price - a.pricing[pricingFilter].price;
+          return (b.price?.[pricingFilter] || 0) - (a.price?.[pricingFilter] || 0);
         case "rating":
-          return b.rating - a.rating;
+          return (b.rating || 0) - (a.rating || 0);
         case "popular":
-          return b.reviews - a.reviews;
+          return (b.reviews || 0) - (a.reviews || 0);
         default:
           return a.name.localeCompare(b.name);
       }
     });
 
     return filtered;
-  }, [searchTerm, selectedCategory, pricingFilter, sortBy]);
+  }, [AllProduct, searchTerm, selectedCategory, pricingFilter, sortBy]);
 
   return (
     <div>
+      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-800 mb-2">Browse Products</h1>
         <p className="text-slate-600">Find the perfect equipment for your needs</p>
       </div>
 
+      {/* Filters */}
       <Card className="mb-8">
         <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 bg-">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
               <Input
@@ -167,6 +82,7 @@ export default function ProductsGrid({ onAddToCart, onProductSelect }) {
               />
             </div>
 
+            {/* Category */}
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Category" />
@@ -180,17 +96,23 @@ export default function ProductsGrid({ onAddToCart, onProductSelect }) {
               </SelectContent>
             </Select>
 
+            {/* Pricing filter from API rental_units */}
             <Select value={pricingFilter} onValueChange={setPricingFilter}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Pricing" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="hourly">Hourly Rates</SelectItem>
-                <SelectItem value="daily">Daily Rates</SelectItem>
-                <SelectItem value="weekly">Weekly Rates</SelectItem>
+                {Array.from(
+                  new Set(AllProduct.flatMap((p) => p.rental_units || []))
+                ).map((unit) => (
+                  <SelectItem key={unit} value={unit}>
+                    {unit.replace("PER_", "")} Rates
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
+            {/* Sort by */}
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Sort by" />
@@ -204,6 +126,7 @@ export default function ProductsGrid({ onAddToCart, onProductSelect }) {
               </SelectContent>
             </Select>
 
+            {/* Count */}
             <div className="text-sm text-slate-600 flex items-center">
               {filteredProducts.length} products found
             </div>
@@ -211,6 +134,7 @@ export default function ProductsGrid({ onAddToCart, onProductSelect }) {
         </CardContent>
       </Card>
 
+      {/* Products Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProducts.map((product, index) => (
           <motion.div
@@ -219,46 +143,54 @@ export default function ProductsGrid({ onAddToCart, onProductSelect }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 group" onClick={()=>navigate(`/Customer-products/${product.id}`)}>
+            <Card
+              className="overflow-hidden hover:shadow-lg transition-shadow duration-300 group"
+              onClick={() => navigate(`/Customer-products/${product.id}`)}
+            >
+              {/* Product image */}
               <div className="relative overflow-hidden">
                 <img
-                  src={product.image || "/placeholder.svg"}
+                  src={`${fileUrl}/products/${product.images_id[0]}`}
                   alt={product.name}
-                  width={400}
-                  height={250}
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute top-4 right-4">
                   <span
                     className={`text-xs px-2 py-1 rounded-full ${
-                      product.availability === "Available"
+                      product.available_quantity > 0
                         ? "bg-green-100 text-green-800"
                         : "bg-yellow-100 text-yellow-800"
                     }`}
                   >
-                    {product.availability}
+                    {product.available_quantity > 0 ? "Available" : "Out of Stock"}
                   </span>
                 </div>
               </div>
 
+              {/* Product details */}
               <CardContent className="p-6">
                 <h3 className="text-lg font-bold text-slate-800 mb-2">{product.name}</h3>
-                <p className="text-2xl font-bold text-teal-600 mb-2">{product.pricing[pricingFilter].label}</p>
+                <p className="text-2xl font-bold text-teal-600 mb-2">
+                  ${product.price?.[pricingFilter] || 0} / {pricingFilter.replace("PER_", "").toLowerCase()}
+                </p>
                 <p className="text-slate-600 text-sm mb-3 line-clamp-2">{product.description}</p>
 
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400 mr-1" />
                     <span className="text-sm text-slate-600">
-                      {product.rating} ({product.reviews})
+                      {product.rating || "N/A"} ({product.reviews || 0})
                     </span>
                   </div>
                 </div>
 
                 <Button
-                  onClick={() => (onProductSelect ? onProductSelect(product) : setSelectedProduct(product))}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onProductSelect ? onProductSelect(product) : setSelectedProduct(product);
+                  }}
                   className="w-full bg-teal-600 hover:bg-teal-700 text-white"
-                  disabled={product.availability !== "Available"}
+                  disabled={product.available_quantity === 0}
                 >
                   View Details
                 </Button>
@@ -268,6 +200,7 @@ export default function ProductsGrid({ onAddToCart, onProductSelect }) {
         ))}
       </div>
 
+      {/* No products */}
       {filteredProducts.length === 0 && (
         <div className="text-center py-12">
           <div className="text-slate-400 text-6xl mb-4">🔍</div>
@@ -276,8 +209,13 @@ export default function ProductsGrid({ onAddToCart, onProductSelect }) {
         </div>
       )}
 
+      {/* Booking modal */}
       {selectedProduct && (
-        <BookingModal product={selectedProduct} onClose={() => setSelectedProduct(null)} onAddToCart={onAddToCart} />
+        <BookingModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+          onAddToCart={onAddToCart}
+        />
       )}
     </div>
   );

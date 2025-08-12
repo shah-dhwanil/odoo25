@@ -5,15 +5,16 @@ import { Input } from "../../ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
 import { X, Mail, Lock, User, Phone, Building } from "lucide-react";
-import { login, signup } from "../../../../src/hooks/useApi";
-
-const listA=["shop owner","customer","delivery partner"]
-
+import axios from "axios";
+import Cookies from "js-cookie";
+import { backendurl } from "../../../../src/App";
+import { useNavigate } from "react-router-dom";
 
 function LoginPopup({ onClose, onLogin }) {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const navigate=useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -25,6 +26,18 @@ function LoginPopup({ onClose, onLogin }) {
     gstNo: "",
   });
 
+  const storeAuthData = (access_token, user_id, role) => {
+    Cookies.set("token", access_token, { expires: 7 });
+    localStorage.setItem("user_id", user_id);
+    localStorage.setItem("role", role);
+    if(role=="CUSTOMER"){
+        navigate('/Customer')
+    }
+    else if(role=="SHOP_OWNER"){
+      navigate('/shop-owner')
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -33,69 +46,96 @@ function LoginPopup({ onClose, onLogin }) {
     try {
       if (isLogin) {
         // Login API call
-        const response = await login({
+        console.log("Making login request to:", `${backendurl}/users/login`);
+        console.log("Login payload:", {
           email_id: formData.email,
-          password: formData.password
+          password: formData.password,
         });
 
-        // Store auth data
-        if (response.access_token) {
-          localStorage.setItem('access_token', response.access_token);
-          localStorage.setItem('user_id', response.user_id);
-          localStorage.setItem('user_role', response.role);
+        const response = await axios.post(`${backendurl}/users/login`, {
+          email_id: formData.email,
+          password: formData.password,
+        });
+
+        console.log("Login response:", response);
+        console.log("Login response data:", response.data);
+
+        // Store auth data if available
+        if (response.data.access_token) {
+          storeAuthData(response.data.access_token, response.data.user_id, response.data.role);
+          console.log("Auth data stored successfully");
         }
 
-        // Create user data for the app state
-        const userData = {
-          id: response.user_id,
+        // Call onLogin callback
+        onLogin({
+          id: response.data.user_id,
           email: formData.email,
-          role: response.role,
-          // Add other user data as needed
-        };
+          role: response.data.role,
+        });
 
-        onLogin(userData);
       } else {
         // Signup API call
         const userTypeMap = {
-          "customer": "CUSTOMER",
-          "shop_owner": "SHOP_OWNER", 
-          "delivery_partner": "DELIVERY_PARTNER"
+          customer: "CUSTOMER",
+          shop_owner: "SHOP_OWNER",
+          delivery_partner: "DELIVERY_PARTNER",
         };
 
-        const signupData = {
+        const signupPayload = {
           email_id: formData.email,
           mobile_no: formData.phone,
           user_type: userTypeMap[formData.role],
           name: formData.name,
-          password: formData.password
+          password: formData.password,
         };
 
-        const response = await signup(signupData);
-        
-        // After successful signup, automatically login
-        const loginResponse = await login({
-          email_id: formData.email,
-          password: formData.password
-        });
+        console.log("Making signup request to:", `${backendurl}/users/`);
+        console.log("Signup payload:", signupPayload);
 
-        if (loginResponse.access_token) {
-          localStorage.setItem('access_token', loginResponse.access_token);
-          localStorage.setItem('user_id', loginResponse.user_id);
-          localStorage.setItem('user_role', loginResponse.role);
+        const signupResponse = await axios.post(`${backendurl}/users/`, signupPayload);
+        
+        console.log("Signup response:", signupResponse);
+        console.log("Signup response data:", signupResponse.data);
+
+        // Auto-login after successful signup
+        console.log("Auto-login after signup...");
+        const loginPayload = {
+          email_id: formData.email,
+          password: formData.password,
+        };
+
+        console.log("Making auto-login request to:", `${backendurl}/users/login`);
+        console.log("Auto-login payload:", loginPayload);
+
+        const loginResponse = await axios.post(`${backendurl}/users/login`, loginPayload);
+        
+        console.log("Auto-login response:", loginResponse);
+        console.log("Auto-login response data:", loginResponse.data);
+
+        // Store auth data if available
+        if (loginResponse.data.access_token) {
+          storeAuthData(loginResponse.data.access_token, loginResponse.data.user_id, loginResponse.data.role);
+          console.log("Auth data stored successfully after signup");
         }
 
-        const userData = {
-          id: loginResponse.user_id,
+        // Call onLogin callback
+        onLogin({
+          id: loginResponse.data.user_id,
           email: formData.email,
           name: formData.name,
           phone: formData.phone,
-          role: loginResponse.role,
-        };
-
-        onLogin(userData);
+          role: loginResponse.data.role,
+        });
       }
     } catch (err) {
-      setError(err.message);
+      console.error("API Error:", err);
+      console.error("Error response:", err.response);
+      console.error("Error response data:", err.response?.data);
+      if(err.status_code==404){
+        alert("");
+      }
+      
+      setError(err.response?.data?.detail );
     } finally {
       setLoading(false);
     }
@@ -124,6 +164,7 @@ function LoginPopup({ onClose, onLogin }) {
 
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Role Select */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   Login as
@@ -135,7 +176,7 @@ function LoginPopup({ onClose, onLogin }) {
                   }
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue />
+                    <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="customer">Customer</SelectItem>
@@ -145,6 +186,7 @@ function LoginPopup({ onClose, onLogin }) {
                 </Select>
               </div>
 
+              {/* Extra fields for signup */}
               {!isLogin && (
                 <>
                   <div className="relative">
@@ -215,6 +257,7 @@ function LoginPopup({ onClose, onLogin }) {
                 </>
               )}
 
+              {/* Email */}
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                 <Input
@@ -229,6 +272,7 @@ function LoginPopup({ onClose, onLogin }) {
                 />
               </div>
 
+              {/* Password */}
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                 <Input
@@ -243,15 +287,15 @@ function LoginPopup({ onClose, onLogin }) {
                 />
               </div>
 
+              {/* Submit */}
               <Button
                 type="submit"
                 className="w-full bg-teal-600 hover:bg-teal-700"
                 disabled={loading}
               >
-                {loading 
-                  ? (isLogin ? "Signing in..." : "Creating account...") 
-                  : (isLogin ? "Sign In" : "Create Account")
-                }
+                {loading
+                  ? (isLogin ? "Signing in..." : "Creating account...")
+                  : (isLogin ? "Sign In" : "Create Account")}
               </Button>
 
               {error && (
@@ -261,11 +305,12 @@ function LoginPopup({ onClose, onLogin }) {
               )}
             </form>
 
+            {/* Toggle Login/Signup */}
             <div className="mt-4 text-center">
               <button
                 onClick={() => {
                   setIsLogin(!isLogin);
-                  setError(""); // Clear error when switching modes
+                  setError("");
                 }}
                 className="text-teal-600 hover:text-teal-700 text-sm"
               >

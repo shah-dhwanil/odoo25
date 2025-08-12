@@ -1,23 +1,90 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { User, Mail, Phone, MapPin, Edit, Save, X } from "lucide-react";
+import axios from "axios";
+import Cookies from "js-cookie";
+import { backendurl } from "../../../../src/App";
 
 export default function ProfileComponents({ user }) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: user.name,
-    email: user.email,
-    phone: user.phone,
-    address: "street city pincode state country",
+    name: user.name || "",
+    email: user.email || "",
+    phone: user.phone || "",
+    addressString: "street city pincode state country", // one editable string
   });
-  console.log(formData);
 
-  const handleSave = () => {
-    // Normally you’d save to a backend here
-    setIsEditing(false);
+  const userid = localStorage.getItem("user_id");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = Cookies.get("token");
+      try {
+        const u_data = await axios.get(`${backendurl}/users/${userid}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const c_data = await axios.get(`${backendurl}/customers/${userid}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const res = c_data.data;
+
+        const addr = res.address?.address?.additionalProp1 || {};
+
+        // join into one editable string
+        const addressString = `${addr.street || ""} ${addr.city || ""} ${addr.pincode || ""} ${addr.state || ""} ${addr.country || ""}`.trim();
+
+        setFormData({
+          name: res.name || "",
+          email: u_data.data.email_id || "",
+          phone: u_data.data.mobile_no || "",
+          addressString,
+        });
+      } catch (e) {
+        console.log(e);
+      }
+    };
+    fetchData();
+  }, [userid]);
+
+const handleSave = async () => {
+  const token = Cookies.get("token");
+
+  // Safely split address string
+  const parts = formData.addressString.trim().split(/\s+/);
+  const [street = "", city = "", pincode = "", state = "", country = ""] = parts;
+
+  const payload = {
+    name: formData.name,
+    email: formData.email,
+    phone: formData.phone,
+    loyalty_points: formData.loyalty_points || 0,
+    address: {
+      address: {
+        additionalProp1: {
+          street,
+          city,
+          pincode,
+          state,
+          country,
+        },
+      },
+    },
   };
+
+  try {
+    await axios.put(`${backendurl}/customers/${userid}`, payload, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setIsEditing(false);
+  } catch (e) {
+    console.log("Save error:", e.response?.data || e.message);
+  }
+};
+
 
   return (
     <div>
@@ -80,6 +147,7 @@ export default function ProfileComponents({ user }) {
                   </label>
                   {isEditing ? (
                     <Input
+                    disabled
                       type="email"
                       value={formData.email}
                       onChange={(e) =>
@@ -101,6 +169,7 @@ export default function ProfileComponents({ user }) {
                   </label>
                   {isEditing ? (
                     <Input
+                    disabled
                       type="tel"
                       value={formData.phone}
                       onChange={(e) =>
@@ -116,21 +185,24 @@ export default function ProfileComponents({ user }) {
                 </div>
 
                 {/* Address */}
-                <div>
+                <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Address
                   </label>
                   {isEditing ? (
                     <Input
-                      value={formData.address}
+                      value={formData.addressString}
                       onChange={(e) =>
-                        setFormData({ ...formData, address: e.target.value })
+                        setFormData({
+                          ...formData,
+                          addressString: e.target.value,
+                        })
                       }
                     />
                   ) : (
                     <div className="flex items-center p-3 bg-slate-50 rounded-md">
                       <MapPin className="w-5 h-5 text-slate-400 mr-3" />
-                      <span>{formData.address}</span>
+                      <span>{formData.addressString}</span>
                     </div>
                   )}
                 </div>

@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card"
 import { Building, User, Mail, Phone, MapPin, FileText, Star, Package, DollarSign, TrendingUp } from "lucide-react"
 
-export default function ShopOwnerDashboardHome({ user }) {
+export default function ShopOwnerDashboardHome({ user,ownerName,UserName }) {
   return (
     <div className="space-y-8">
       <div>
@@ -27,7 +27,7 @@ export default function ShopOwnerDashboardHome({ user }) {
               </div>
               <div>
                 <p className="text-sm text-slate-600">Shop Name</p>
-                <p className="font-semibold text-slate-800">{user.shopName}</p>
+                <p className="font-semibold text-slate-800">{ownerName.name}</p>
               </div>
             </div>
 
@@ -37,7 +37,7 @@ export default function ShopOwnerDashboardHome({ user }) {
               </div>
               <div>
                 <p className="text-sm text-slate-600">Owner Name</p>
-                <p className="font-semibold text-slate-800">{user.name}</p>
+                <p className="font-semibold text-slate-800">{ownerName.owner_name}</p>
               </div>
             </div>
 
@@ -47,7 +47,7 @@ export default function ShopOwnerDashboardHome({ user }) {
               </div>
               <div>
                 <p className="text-sm text-slate-600">Email</p>
-                <p className="font-semibold text-slate-800">{user.email}</p>
+                <p className="font-semibold text-slate-800">{UserName.email_id}</p>
               </div>
             </div>
 
@@ -57,7 +57,7 @@ export default function ShopOwnerDashboardHome({ user }) {
               </div>
               <div>
                 <p className="text-sm text-slate-600">Phone</p>
-                <p className="font-semibold text-slate-800">{user.phone}</p>
+                <p className="font-semibold text-slate-800">{UserName.mobile_no}</p>
               </div>
             </div>
 
@@ -67,7 +67,7 @@ export default function ShopOwnerDashboardHome({ user }) {
               </div>
               <div>
                 <p className="text-sm text-slate-600">Address</p>
-                <p className="font-semibold text-slate-800 text-sm">{user.address}</p>
+                <p className="font-semibold text-slate-800 text-sm">{ownerName?.address?.street} {ownerName?.address?.city} {ownerName?.address?.state} {ownerName?.address?.pincode} {ownerName?.address?.country}</p>
               </div>
             </div>
 
@@ -77,7 +77,7 @@ export default function ShopOwnerDashboardHome({ user }) {
               </div>
               <div>
                 <p className="text-sm text-slate-600">GST Number</p>
-                <p className="font-semibold text-slate-800">{user.gstNo}</p>
+                <p className="font-semibold text-slate-800">{ownerName.gst_no}</p>
               </div>
             </div>
           </div>

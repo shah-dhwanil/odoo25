@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { User, Package, Calendar, LogOut, ShoppingCart } from "lucide-react"
 import ProductsGrid from "../../components/CustomerComponents/ProductsGrid"
@@ -8,19 +8,26 @@ import Cart from "../CustomerComponents/Cart"
 import ProductDetailView from "../../components/CustomerComponents/ProductDetailView"
 import ShopDetailView from "../CustomerComponents/ShopDetailView"
 import ProfileComponents from "./ProfileComponents"
+import axios from "axios"
+import { backendurl } from "../../../../src/App"
+import Cookies from 'js-cookie'
+import { useNavigate } from "react-router-dom"
 
-export default function CustomerDashboard({ user, onLogout }) {
+export default function CustomerDashboard({ user }) {
   const [activeTab, setActiveTab] = useState("products")
   const [cartItems, setCartItems] = useState([])
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [selectedShop, setSelectedShop] = useState(null)
+  const [AllProduct,setProduct]=useState([]);
+  const token = Cookies.get('token');
+  const navigate=useNavigate();
   const dummyUser = {
-  name: "John Doe",
-  email: "john.doe@example.com",
-  phone: "+1 555-123-4567",
-  address: "456 Elm Street, Springfield, IL 62704",
-  joinDate: "2020-05-15T00:00:00.000Z", // ISO date string
-};
+    name: "John Doe",
+    email: "john.doe@example.com",
+    phone: "+1 555-123-4567",
+    address: "456 Elm Street, Springfield, IL 62704",
+    joinDate: "2020-05-15T00:00:00.000Z", // ISO date string
+  };
 
 
   const addToCart = (product, quantity, dates, pricing) => {
@@ -55,6 +62,31 @@ export default function CustomerDashboard({ user, onLogout }) {
     { id: "profile", label: "Profile", icon: User },
   ]
 
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await axios.get(`${backendurl}/products/`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+        const result=data.data;
+        setProduct(result.products)
+      } catch (e) {
+        console.log(e);
+      }
+
+    }
+    fetchData();
+  }, [])
+  console.log(AllProduct);
+  const onLogout=()=>{
+    navigate('/')
+    Cookies.remove("token");
+    localStorage.removeItem("role")
+    localStorage.removeItem("user_id")
+  }
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -74,11 +106,10 @@ export default function CustomerDashboard({ user, onLogout }) {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activeTab === tab.id
+                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === tab.id
                       ? "bg-teal-100 text-teal-700"
                       : "text-slate-600 hover:text-slate-800 hover:bg-gray-100"
-                  }`}
+                    }`}
                 >
                   <tab.icon className="w-4 h-4 mr-2" />
                   {tab.label}
@@ -108,11 +139,10 @@ export default function CustomerDashboard({ user, onLogout }) {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
-                    activeTab === tab.id
+                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${activeTab === tab.id
                       ? "bg-teal-100 text-teal-700"
                       : "text-slate-600 hover:text-slate-800 hover:bg-gray-100"
-                  }`}
+                    }`}
                 >
                   <tab.icon className="w-4 h-4 mr-2" />
                   {tab.label}
@@ -132,7 +162,7 @@ export default function CustomerDashboard({ user, onLogout }) {
           transition={{ duration: 0.3 }}
         >
           {activeTab === "products" && (
-            <ProductsGrid onAddToCart={addToCart} onProductSelect={handleProductSelect} />
+            <ProductsGrid onAddToCart={addToCart} onProductSelect={handleProductSelect} AllProduct={AllProduct} />
           )}
           {activeTab === "product-detail" && selectedProduct && (
             <ProductDetailView

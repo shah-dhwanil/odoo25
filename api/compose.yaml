@@ -14,7 +14,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-  
   minio:
     image: minio/minio:RELEASE.2025-03-12T18-04-18Z
     ports:

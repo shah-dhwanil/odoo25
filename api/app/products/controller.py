@@ -3,6 +3,7 @@ from uuid import UUID
 
 import asyncpg
 from fastapi import APIRouter, Depends, Query, UploadFile, status
+from magic import Magic
 from uuid_utils import uuid7
 
 from app.base.exception_handler import http_exception_handler
@@ -295,6 +296,9 @@ async def upload_images(
 ):
     file_id = str(uuid7())
     client = MinioClient.get_client()
+    mime = Magic(mime=True)
+    mime.from_file(file)
+    print(f"File MIME type: {mime.mime_type}")
     await client.put_object(
         bucket_name="products",
         object_name=file_id,

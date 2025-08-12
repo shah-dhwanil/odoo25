@@ -1,3 +1,4 @@
+from random import randint
 from typing import List, Optional
 from uuid import UUID
 
@@ -97,7 +98,12 @@ class UserService:
                         id=user_in_db.id,
                         name=user_with_hashed_password.name,
                         owner_name="",
-                        gst_no="24AAAAA0000H1Z0",
+                        gst_no="24AAAAA"
+                        + str(randint(0, 9))
+                        + str(randint(0, 9))
+                        + str(randint(0, 9))
+                        + str(randint(0, 9))
+                        + "H1Z0",
                         address=Address(
                             street="", city="", state="", country="", pincode="396001"
                         ),

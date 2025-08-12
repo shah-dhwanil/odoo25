@@ -7,10 +7,13 @@ import { useNavigate } from "react-router-dom";
 
 
 
+
 export default function Header({setShowLoginModal}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
 const navigate = useNavigate();
+// const userId=localStorage("user_id
+// console.l
 
   const navItems = [
   { name: "Home", href: "/" },

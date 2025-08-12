@@ -2,6 +2,8 @@ import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Search, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { backendurl } from "../../../../src/App";
+import axios from 'axios';
 
 const allProducts = [
   {
@@ -108,12 +110,14 @@ const categories = [
 
 export default function ProductsGrid({ onAddToCart }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [categoriesList,setcategoriesList] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [pricingFilter, setPricingFilter] = useState("daily");
   const [sortBy, setSortBy] = useState("name");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const navigate = useNavigate();
 
+  
   const filteredProducts = useMemo(() => {
     const filtered = allProducts.filter((product) => {
       const matchesSearch =

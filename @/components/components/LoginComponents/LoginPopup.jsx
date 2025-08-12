@@ -96,7 +96,7 @@ function LoginPopup({ onClose, onLogin }) {
         
         console.log("Signup response:", signupResponse);
         console.log("Signup response data:", signupResponse.data);
-
+        
         // Auto-login after successful signup
         console.log("Auto-login after signup...");
         const loginPayload = {

@@ -294,8 +294,8 @@ export default function ProductDetailView({ product, onBack, onShopSelect, onAdd
     // Reset address fields when opening popup
     setPickupAddress("");
     setDeliveryAddress("");
-    setPickupDate(startDate);
-    setDeliveryDate(endDate);
+    setPickupDate(endDate);
+    setDeliveryDate(startDate);
     setShowRentPopup(true);
   };
 
@@ -390,19 +390,21 @@ export default function ProductDetailView({ product, onBack, onShopSelect, onAdd
           headers: { Authorization: `Bearer ${token}` }
         }
       );
-      console.log("Order creation response:", response.data);
+      if (response.status != 201){
+
+        setError(response.data.detail || "Failed to create order. Please try again.");
+        console.log("Order creation response:", response.data);
+      }
       setCurrentOrder(response.data);
-      setShowRentPopup(false);
-      setShowOrderStatus(true);
-
-
     } catch (e) {
-      console.error("Order creation error:", e);
-      console.error("Error response:", e.response?.data);
-      setError(e.response?.data?.message || "Failed to create order. Please try again.");
+      // console.error("Order creation error:", e);
+      // console.error("Error response:", e.response?.data);
+      // setError(e.response?.data?.message || "Failed to create order. Please try again.");
     } finally {
       setLoading(false);
     }
+    setShowRentPopup(false);
+    setShowOrderStatus(true);
   };
 
 
@@ -884,6 +886,31 @@ export default function ProductDetailView({ product, onBack, onShopSelect, onAdd
                 {error}
               </div>
             )}
+            {/* Delivery Address */}
+            <div className="border border-gray-200 rounded-lg p-4">
+              <h3 className="font-semibold text-lg mb-3 text-blue-700">Delivery Address *</h3>
+              <div className="space-y-2">
+                <div className="text-xs text-gray-500">
+                  Include: Street, Area, City, State, Pincode
+                </div>
+                {deliveryAddress && (
+                  <div className="bg-blue-50 p-2 rounded border border-blue-200">
+                    <div className="text-xs text-blue-700">
+                      <strong>Parsed Address:</strong>
+                      <br />
+                      {JSON.stringify(parseAddress(deliveryAddress), null, 2)}
+                    </div>
+                  </div>
+                )}
+                <textarea
+                  value={deliveryAddress}
+                  onChange={(e) => setDeliveryAddress(e.target.value)}
+                  placeholder="Enter complete delivery address (e.g., 456 Oak Avenue, Suburb, Delhi, Delhi, 110001)"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+                  rows={3}
+                />
+              </div>
+            </div>
 
             {/* Pickup Address */}
             <div className="border border-gray-200 rounded-lg p-4">
@@ -911,34 +938,32 @@ export default function ProductDetailView({ product, onBack, onShopSelect, onAdd
               </div>
             </div>
 
-            {/* Delivery Address */}
-            <div className="border border-gray-200 rounded-lg p-4">
-              <h3 className="font-semibold text-lg mb-3 text-blue-700">Delivery Address *</h3>
-              <div className="space-y-2">
-                <div className="text-xs text-gray-500">
-                  Include: Street, Area, City, State, Pincode
-                </div>
-                {deliveryAddress && (
-                  <div className="bg-blue-50 p-2 rounded border border-blue-200">
-                    <div className="text-xs text-blue-700">
-                      <strong>Parsed Address:</strong>
-                      <br />
-                      {JSON.stringify(parseAddress(deliveryAddress), null, 2)}
-                    </div>
-                  </div>
-                )}
-                <textarea
-                  value={deliveryAddress}
-                  onChange={(e) => setDeliveryAddress(e.target.value)}
-                  placeholder="Enter complete delivery address (e.g., 456 Oak Avenue, Suburb, Delhi, Delhi, 110001)"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
-                  rows={3}
-                />
-              </div>
-            </div>
+            
 
             {/* Date Selection */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Delivery Date *
+                </label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className="w-full p-3 text-left border border-gray-300 rounded-md hover:border-gray-400 focus:ring-2 focus:ring-teal-500">
+                      {deliveryDate
+                        ? deliveryDate.toDateString()
+                        : "Select delivery date"}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      selected={deliveryDate}
+                      onSelect={setDeliveryDate}
+                      disabled={(date) => date < (pickupDate || new Date())}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
                   Pickup Date *
@@ -961,27 +986,6 @@ export default function ProductDetailView({ product, onBack, onShopSelect, onAdd
                 </Popover>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Delivery Date *
-                </label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <button className="w-full p-3 text-left border border-gray-300 rounded-md hover:border-gray-400 focus:ring-2 focus:ring-teal-500">
-                      {deliveryDate
-                        ? deliveryDate.toDateString()
-                        : "Select delivery date"}
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      selected={deliveryDate}
-                      onSelect={setDeliveryDate}
-                      disabled={(date) => date < (pickupDate || new Date())}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
             </div>
 
             {/* Order Summary */}

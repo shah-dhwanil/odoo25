@@ -1,12 +1,15 @@
-from asyncpg import connect
-from pathlib import Path
-from datetime import datetime
-from textwrap import dedent
-from importlib import import_module
-from typing import Optional
-from app.config import Config
 import argparse
 import asyncio
+from datetime import datetime
+from importlib import import_module
+from pathlib import Path
+from textwrap import dedent
+from typing import Optional
+
+from asyncpg import connect
+
+from app.config import Config
+
 
 class MigrationManager:
     config = Config()
@@ -27,8 +30,13 @@ class MigrationManager:
             );
             """
             config = Config()
-            conn = await connect(user=config.POSTGRES_USERNAME, password=config.POSTGRES_PWD,
-                                 database=config.POSTGRES_DB, host=config.POSTGRES_HOST_ADDRESS,port=config.POSTGRES_PORT)
+            conn = await connect(
+                user=config.POSTGRES_USERNAME,
+                password=config.POSTGRES_PWD,
+                database=config.POSTGRES_DB,
+                host=config.POSTGRES_HOST_ADDRESS,
+                port=config.POSTGRES_PORT,
+            )
             await conn.execute(migrations_sql)
             self.migration_table_present = True
 
@@ -39,8 +47,13 @@ class MigrationManager:
         if self.applied_migrations is None:
             await self.ensure_migrations_table()
             config = Config()
-            conn = await connect(user=config.POSTGRES_USERNAME, password=config.POSTGRES_PWD,
-                                 database=config.POSTGRES_DB, host=config.POSTGRES_HOST_ADDRESS,port=config.POSTGRES_PORT)
+            conn = await connect(
+                user=config.POSTGRES_USERNAME,
+                password=config.POSTGRES_PWD,
+                database=config.POSTGRES_DB,
+                host=config.POSTGRES_HOST_ADDRESS,
+                port=config.POSTGRES_PORT,
+            )
             applied_migrations = await conn.fetch(
                 "SELECT name FROM migrations ORDER BY applied_at;"
             )
@@ -144,8 +157,13 @@ class MigrationManager:
         config = Config()
         await self.load_applied_migrations()
         migration_name = f"{module_name}.{slug}"
-        conn = await connect(user=config.POSTGRES_USERNAME, password=config.POSTGRES_PWD,
-                                 database=config.POSTGRES_DB, host=config.POSTGRES_HOST_ADDRESS,port=config.POSTGRES_PORT)
+        conn = await connect(
+            user=config.POSTGRES_USERNAME,
+            password=config.POSTGRES_PWD,
+            database=config.POSTGRES_DB,
+            host=config.POSTGRES_HOST_ADDRESS,
+            port=config.POSTGRES_PORT,
+        )
         # Checks if migration is already applied or not
         if migration_name not in self.applied_migrations:
             module = self.import_module(module_name, slug)
@@ -189,8 +207,13 @@ class MigrationManager:
             ]
             dependencies.reverse()
             config = Config()
-            conn = await connect(user=config.POSTGRES_USERNAME, password=config.POSTGRES_PWD,
-                                 database=config.POSTGRES_DB, host=config.POSTGRES_HOST_ADDRESS,port=config.POSTGRES_PORT)
+            conn = await connect(
+                user=config.POSTGRES_USERNAME,
+                password=config.POSTGRES_PWD,
+                database=config.POSTGRES_DB,
+                host=config.POSTGRES_HOST_ADDRESS,
+                port=config.POSTGRES_PORT,
+            )
             for dependency in dependencies:
                 dep_module, dep_slug = dependency.split(".")
                 module = self.import_module(dep_module, dep_slug)
@@ -244,3 +267,7 @@ async def main():
 
 def run_cli():
     asyncio.run(main())
+
+
+if __name__ == "__main__":
+    run_cli()

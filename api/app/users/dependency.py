@@ -23,7 +23,7 @@ async def get_current_user(
     return UserPayload(**payload)
 
 
-class RequiresPermission:
+class RequiresRole:
     def __init__(self, *required_role: UserType):
         self.required_roles = required_role
 
@@ -31,7 +31,7 @@ class RequiresPermission:
         self,
         user: Annotated[UserPayload, Depends(get_current_user)],
     ) -> None:
-        if user == self.required_roles:
+        if user.role in self.required_roles:
             return user
         else:
             raise HTTPException(status_code=403, detail="Not enough permissions")

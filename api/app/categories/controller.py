@@ -10,6 +10,8 @@ from app.categories.models import Category, CreateCategory, ListCategory, Update
 from app.categories.repository import CategoryRepository
 from app.categories.service import CategoryService
 from app.database import PgPool
+from app.users.dependency import RequiresRole
+from app.users.models import UserType
 
 router = APIRouter(prefix="/categories", tags=["categories"])
 
@@ -25,7 +27,12 @@ async def get_category_service(
         await connection.close()
 
 
-@router.post("/", response_model=Category, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=Category,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN))],
+)
 async def create_category(
     category_data: CreateCategory,
     service: CategoryService = Depends(get_category_service),
@@ -67,7 +74,11 @@ async def get_category(
         )
 
 
-@router.put("/{category_id}", response_model=Category)
+@router.put(
+    "/{category_id}",
+    response_model=Category,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN))],
+)
 async def update_category(
     category_id: UUID,
     category_data: UpdateCategory,
@@ -92,7 +103,11 @@ async def update_category(
         )
 
 
-@router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{category_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN))],
+)
 async def delete_category(
     category_id: UUID, service: CategoryService = Depends(get_category_service)
 ) -> None:

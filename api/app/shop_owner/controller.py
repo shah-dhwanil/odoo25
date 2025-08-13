@@ -19,6 +19,7 @@ from app.shop_owner.models import (
 )
 from app.shop_owner.repository import ShopOwnerRepository
 from app.shop_owner.service import ShopOwnerService
+from app.users.dependency import get_current_user
 
 router = APIRouter(prefix="/shop-owners", tags=["shop-owners"])
 
@@ -58,7 +59,7 @@ async def create_shop_owner(
         )
 
 
-@router.get("/", response_model=ListShopOwner)
+@router.get("/", response_model=ListShopOwner, dependencies=[Depends(get_current_user)])
 async def get_shop_owners(
     service: ShopOwnerService = Depends(get_shop_owner_service),
 ) -> ListShopOwner:
@@ -66,7 +67,11 @@ async def get_shop_owners(
     return await service.list_shop_owners()
 
 
-@router.get("/{shop_owner_id}", response_model=ShopOwner)
+@router.get(
+    "/{shop_owner_id}",
+    response_model=ShopOwner,
+    dependencies=[Depends(get_current_user)],
+)
 async def get_shop_owner(
     shop_owner_id: UUID, service: ShopOwnerService = Depends(get_shop_owner_service)
 ) -> ShopOwner:
@@ -82,7 +87,9 @@ async def get_shop_owner(
         )
 
 
-@router.get("/gst/{gst_no}", response_model=ShopOwner)
+@router.get(
+    "/gst/{gst_no}", response_model=ShopOwner, dependencies=[Depends(get_current_user)]
+)
 async def get_shop_owner_by_gst(
     gst_no: str, service: ShopOwnerService = Depends(get_shop_owner_service)
 ) -> ShopOwner:
@@ -98,7 +105,11 @@ async def get_shop_owner_by_gst(
         )
 
 
-@router.put("/{shop_owner_id}", response_model=ShopOwner)
+@router.put(
+    "/{shop_owner_id}",
+    response_model=ShopOwner,
+    dependencies=[Depends(get_current_user)],
+)
 async def update_shop_owner(
     shop_owner_id: UUID,
     shop_owner_data: UpdateShopOwner,
@@ -123,7 +134,11 @@ async def update_shop_owner(
         )
 
 
-@router.delete("/{shop_owner_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{shop_owner_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(get_current_user)],
+)
 async def delete_shop_owner(
     shop_owner_id: UUID, service: ShopOwnerService = Depends(get_shop_owner_service)
 ) -> None:

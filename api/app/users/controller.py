@@ -8,6 +8,7 @@ from structlog import get_logger
 from app.base.exception_handler import http_exception_handler
 from app.base.exceptions import HTTPException
 from app.database import PgPool
+from app.users.dependency import RequiresRole, get_current_user
 
 from .exceptions import (
     EmailAlreadyExistsException,
@@ -95,6 +96,7 @@ async def login_user(
     response_model=UserListResponse,
     summary="List users",
     description="Get a paginated list of users with optional filtering",
+    dependencies=[Depends(RequiresRole(UserType.ADMIN))],
 )
 async def list_users(
     page: int = Query(1, ge=1, description="Page number"),
@@ -119,6 +121,7 @@ async def list_users(
     response_model=UserResponse,
     summary="Get user by ID",
     description="Get a specific user by their ID",
+    dependencies=[Depends(get_current_user)],
 )
 async def get_user(
     user_id: UUID,
@@ -142,6 +145,7 @@ async def get_user(
     response_model=UserResponse,
     summary="Get user by email",
     description="Get a specific user by their email address",
+    dependencies=[Depends(RequiresRole(UserType.ADMIN))],
 )
 async def get_user_by_email(
     email: str,
@@ -165,6 +169,7 @@ async def get_user_by_email(
     response_model=UserResponse,
     summary="Get user by mobile number",
     description="Get a specific user by their mobile number",
+    dependencies=[Depends(RequiresRole(UserType.ADMIN))],
 )
 async def get_user_by_mobile(
     mobile_no: str,
@@ -188,6 +193,7 @@ async def get_user_by_mobile(
     response_model=List[UserResponse],
     summary="Get users by type",
     description="Get all users of a specific type",
+    dependencies=[Depends(RequiresRole(UserType.ADMIN))],
 )
 async def get_users_by_type(
     user_type: UserType,
@@ -203,6 +209,7 @@ async def get_users_by_type(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Update user password",
     description="Update a user's password with current password verification",
+    dependencies=[Depends(get_current_user)],
 )
 async def update_password(
     user_id: UUID,
@@ -226,6 +233,7 @@ async def update_password(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete user",
     description="Soft delete a user (sets is_deleted = TRUE)",
+    dependencies=[Depends(get_current_user)],
 )
 async def delete_user(
     user_id: UUID,

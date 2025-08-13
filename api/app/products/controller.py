@@ -13,20 +13,15 @@ from app.minio import MinioClient
 from app.products.exceptions import (
     InsufficientQuantity,
     InvalidPriceConfiguration,
-    InvalidRentalUnit,
     ProductAlreadyExists,
     ProductDeleted,
     ProductNotFound,
     ProductOwnerMismatch,
 )
-from app.products.models import (
-    CreateProduct,
-    ListProduct,
-    Product,
-    RentalUnit,
-    UpdateProduct,
-)
+from app.products.models import CreateProduct, ListProduct, Product, UpdateProduct
 from app.products.service import ProductService
+from app.users.dependency import RequiresRole
+from app.users.models import UserType
 
 router = APIRouter(prefix="/products", tags=["products"])
 
@@ -41,7 +36,12 @@ async def get_product_service(
         await connection.close()
 
 
-@router.post("/", response_model=Product, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=Product,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN, UserType.SELLER))],
+)
 async def create_product(
     product_data: CreateProduct,
     service: ProductService = Depends(get_product_service),
@@ -117,7 +117,11 @@ async def get_product(
         )
 
 
-@router.put("/{product_id}", response_model=Product)
+@router.put(
+    "/{product_id}",
+    response_model=Product,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN, UserType.SELLER))],
+)
 async def update_product(
     product_id: UUID,
     product_data: UpdateProduct,
@@ -173,7 +177,11 @@ async def update_product(
         )
 
 
-@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{product_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN, UserType.SELLER))],
+)
 async def delete_product(
     product_id: UUID, service: ProductService = Depends(get_product_service)
 ) -> None:
@@ -210,7 +218,11 @@ async def delete_product(
         )
 
 
-@router.post("/{product_id}/confirm-rental", response_model=Product)
+@router.post(
+    "/{product_id}/confirm-rental",
+    response_model=Product,
+    dependencies=[Depends(RequiresRole(UserType.CUSTOMER))],
+)
 async def confirm_rental(
     product_id: UUID,
     quantity: int = Query(..., ge=1, description="Quantity to confirm rental"),
@@ -235,7 +247,11 @@ async def confirm_rental(
         )
 
 
-@router.post("/{product_id}/return", response_model=Product)
+@router.post(
+    "/{product_id}/return",
+    response_model=Product,
+    dependencies=[Depends(RequiresRole(UserType.CUSTOMER))],
+)
 async def return_rental(
     product_id: UUID,
     quantity: int = Query(..., ge=1, description="Quantity to return"),
@@ -260,37 +276,10 @@ async def return_rental(
         )
 
 
-@router.get("/{product_id}/price/{rental_unit}", response_model=dict)
-async def get_price_for_rental_unit(
-    product_id: UUID,
-    rental_unit: RentalUnit,
-    service: ProductService = Depends(get_product_service),
-) -> dict:
-    """Get price for a specific rental unit."""
-    try:
-        price = await service.get_price_for_rental_unit(product_id, rental_unit)
-        return {
-            "product_id": product_id,
-            "rental_unit": rental_unit.value,
-            "price": price,
-        }
-    except ProductNotFound as e:
-        return http_exception_handler(
-            HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                error=e,
-            )
-        )
-    except InvalidRentalUnit as e:
-        return http_exception_handler(
-            HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                error=e,
-            )
-        )
-
-
-@router.post("/upload_images")
+@router.post(
+    "/upload_images",
+    dependencies=[Depends(RequiresRole(UserType.ADMIN, UserType.SELLER))],
+)
 async def upload_images(
     file: UploadFile,
 ):

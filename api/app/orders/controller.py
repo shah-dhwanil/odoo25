@@ -32,6 +32,8 @@ from app.orders.models import (
 )
 from app.orders.repository import OrderRepository
 from app.orders.service import OrderService
+from app.users.dependency import RequiresRole, get_current_user
+from app.users.models import UserType
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
@@ -47,7 +49,12 @@ async def get_order_service(
         await connection.close()
 
 
-@router.post("/", response_model=Order, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=Order,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(RequiresRole(UserType.CUSTOMER))],
+)
 async def create_order(
     order_data: CreateOrder,
     service: OrderService = Depends(get_order_service),
@@ -76,7 +83,9 @@ async def create_order(
         )
 
 
-@router.get("/", response_model=ListOrder)
+@router.get(
+    "/", response_model=ListOrder, dependencies=[Depends(RequiresRole(UserType.ADMIN))]
+)
 async def get_orders(
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
@@ -86,7 +95,9 @@ async def get_orders(
     return await service.get_orders(limit=limit, offset=offset)
 
 
-@router.get("/{order_id}", response_model=Order)
+@router.get(
+    "/{order_id}", response_model=Order, dependencies=[Depends(get_current_user)]
+)
 async def get_order(
     order_id: UUID, service: OrderService = Depends(get_order_service)
 ) -> Order:
@@ -102,7 +113,11 @@ async def get_order(
         )
 
 
-@router.get("/users/{user_id}", response_model=ListOrder)
+@router.get(
+    "/users/{user_id}",
+    response_model=ListOrder,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN, UserType.CUSTOMER))],
+)
 async def get_orders_by_user(
     user_id: UUID,
     limit: int = Query(100, ge=1, le=1000),
@@ -113,7 +128,11 @@ async def get_orders_by_user(
     return await service.get_orders_by_user(user_id, limit=limit, offset=offset)
 
 
-@router.get("/products/{product_id}", response_model=ListOrder)
+@router.get(
+    "/products/{product_id}",
+    response_model=ListOrder,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN, UserType.SHOP_OWNER))],
+)
 async def get_orders_by_product(
     product_id: UUID,
     limit: int = Query(100, ge=1, le=1000),
@@ -124,7 +143,11 @@ async def get_orders_by_product(
     return await service.get_orders_by_product(product_id, limit=limit, offset=offset)
 
 
-@router.get("/shops/{shop_owner}", response_model=ListOrder)
+@router.get(
+    "/shops/{shop_owner}",
+    response_model=ListOrder,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN, UserType.SHOP_OWNER))],
+)
 async def get_orders_by_shop_owner(
     shop_owner: UUID,
     service: OrderService = Depends(get_order_service),
@@ -133,7 +156,11 @@ async def get_orders_by_shop_owner(
     return await service.get_order_by_shop_owner(shop_owner)
 
 
-@router.get("/status/{status}", response_model=ListOrder)
+@router.get(
+    "/status/{status}",
+    response_model=ListOrder,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN, UserType.CUSTOMER))],
+)
 async def get_orders_by_status(
     status: OrderStatus,
     limit: int = Query(100, ge=1, le=1000),
@@ -144,7 +171,9 @@ async def get_orders_by_status(
     return await service.get_orders_by_status(status, limit=limit, offset=offset)
 
 
-@router.patch("/{order_id}/status", response_model=Order)
+@router.patch(
+    "/{order_id}/status", response_model=Order, dependencies=[Depends(get_current_user)]
+)
 async def update_order_status(
     order_id: UUID,
     update_data: UpdateOrderStatus,
@@ -176,7 +205,11 @@ async def update_order_status(
         )
 
 
-@router.patch("/{order_id}/payment-status", response_model=Order)
+@router.patch(
+    "/{order_id}/payment-status",
+    response_model=Order,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN, UserType.CUSTOMER))],
+)
 async def update_payment_status(
     order_id: UUID,
     update_data: UpdatePaymentStatus,
@@ -201,7 +234,11 @@ async def update_payment_status(
         )
 
 
-@router.patch("/{order_id}/payment", response_model=Order)
+@router.patch(
+    "/{order_id}/payment",
+    response_model=Order,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN, UserType.CUSTOMER))],
+)
 async def update_amount_paid(
     order_id: UUID,
     update_data: UpdateAmountPaid,
@@ -226,7 +263,11 @@ async def update_amount_paid(
         )
 
 
-@router.patch("/{order_id}/pickup-complete", response_model=Order)
+@router.patch(
+    "/{order_id}/pickup-complete",
+    response_model=Order,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN, UserType.DELIVERY_PARTNER))],
+)
 async def complete_pickup(
     order_id: UUID,
     service: OrderService = Depends(get_order_service),
@@ -257,7 +298,11 @@ async def complete_pickup(
         )
 
 
-@router.patch("/{order_id}/delivery-photos", response_model=Order)
+@router.patch(
+    "/{order_id}/delivery-photos",
+    response_model=Order,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN, UserType.DELIVERY_PARTNER))],
+)
 async def update_delivery_photos(
     order_id: UUID,
     update_data: UpdateDeliveryPhotoId,
@@ -275,7 +320,11 @@ async def update_delivery_photos(
         )
 
 
-@router.patch("/{order_id}/pickup-photos", response_model=Order)
+@router.patch(
+    "/{order_id}/pickup-photos",
+    response_model=Order,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN, UserType.DELIVERY_PARTNER))],
+)
 async def update_pickup_photos(
     order_id: UUID,
     update_data: UpdatePickupPhotoId,
@@ -293,7 +342,11 @@ async def update_pickup_photos(
         )
 
 
-@router.patch("/{order_id}/ratings", response_model=Order)
+@router.patch(
+    "/{order_id}/ratings",
+    response_model=Order,
+    dependencies=[Depends(RequiresRole(UserType.CUSTOMER))],
+)
 async def update_ratings(
     order_id: UUID,
     update_data: UpdateRatings,
@@ -318,7 +371,11 @@ async def update_ratings(
         )
 
 
-@router.patch("/{order_id}/cancel", response_model=Order)
+@router.patch(
+    "/{order_id}/cancel",
+    response_model=Order,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN, UserType.CUSTOMER))],
+)
 async def cancel_order(
     order_id: UUID,
     service: OrderService = Depends(get_order_service),

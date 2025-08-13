@@ -18,6 +18,8 @@ from app.delivery_partner.models import (
 )
 from app.delivery_partner.repository import DeliveryPartnerRepository
 from app.delivery_partner.service import DeliveryPartnerService
+from app.users.dependency import RequiresRole, get_current_user
+from app.users.models import UserType
 
 router = APIRouter(prefix="/delivery-partners", tags=["delivery-partners"])
 
@@ -50,7 +52,11 @@ async def create_delivery_partner(
         )
 
 
-@router.get("/", response_model=ListDeliveryPartner)
+@router.get(
+    "/",
+    response_model=ListDeliveryPartner,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN))],
+)
 async def get_delivery_partners(
     service: DeliveryPartnerService = Depends(get_delivery_partner_service),
 ) -> ListDeliveryPartner:
@@ -58,7 +64,11 @@ async def get_delivery_partners(
     return await service.get_delivery_partners()
 
 
-@router.get("/{delivery_partner_id}", response_model=DeliveryPartner)
+@router.get(
+    "/{delivery_partner_id}",
+    response_model=DeliveryPartner,
+    dependencies=[Depends(get_current_user)],
+)
 async def get_delivery_partner(
     delivery_partner_id: UUID,
     service: DeliveryPartnerService = Depends(get_delivery_partner_service),
@@ -75,7 +85,11 @@ async def get_delivery_partner(
         )
 
 
-@router.put("/{delivery_partner_id}", response_model=DeliveryPartner)
+@router.put(
+    "/{delivery_partner_id}",
+    response_model=DeliveryPartner,
+    dependencies=[Depends(RequiresRole(UserType.DELIVERY_PARTNER))],
+)
 async def update_delivery_partner(
     delivery_partner_id: UUID,
     delivery_partner_data: UpdateDeliveryPartner,
@@ -95,7 +109,11 @@ async def update_delivery_partner(
         )
 
 
-@router.delete("/{delivery_partner_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{delivery_partner_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN, UserType.DELIVERY_PARTNER))],
+)
 async def delete_delivery_partner(
     delivery_partner_id: UUID,
     service: DeliveryPartnerService = Depends(get_delivery_partner_service),

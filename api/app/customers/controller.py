@@ -9,6 +9,8 @@ from app.customers.exceptions import CustomerAlreadyExists, CustomerNotFound
 from app.customers.models import CreateCustomer, Customer, ListCustomer, UpdateCustomer
 from app.customers.service import CustomerService
 from app.database import PgPool
+from app.users.dependency import RequiresRole
+from app.users.models import UserType
 
 router = APIRouter(prefix="/customers", tags=["customers"])
 
@@ -40,7 +42,11 @@ async def create_customer(
         )
 
 
-@router.get("/", response_model=ListCustomer)
+@router.get(
+    "/",
+    response_model=ListCustomer,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN))],
+)
 async def get_customers(
     service: CustomerService = Depends(get_customer_service),
 ) -> ListCustomer:
@@ -49,7 +55,11 @@ async def get_customers(
     return ListCustomer(customers=customers)
 
 
-@router.get("/{customer_id}", response_model=Customer)
+@router.get(
+    "/{customer_id}",
+    response_model=Customer,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN, UserType.CUSTOMER))],
+)
 async def get_customer(
     customer_id: UUID, service: CustomerService = Depends(get_customer_service)
 ) -> Customer:
@@ -65,7 +75,11 @@ async def get_customer(
         )
 
 
-@router.put("/{customer_id}", response_model=Customer)
+@router.put(
+    "/{customer_id}",
+    response_model=Customer,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN, UserType.CUSTOMER))],
+)
 async def update_customer(
     customer_id: UUID,
     customer_data: UpdateCustomer,
@@ -83,7 +97,11 @@ async def update_customer(
         )
 
 
-@router.delete("/{customer_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{customer_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN, UserType.CUSTOMER))],
+)
 async def delete_customer(
     customer_id: UUID, service: CustomerService = Depends(get_customer_service)
 ) -> None:
@@ -99,7 +117,11 @@ async def delete_customer(
         )
 
 
-@router.post("/{customer_id}/loyalty-points/add", response_model=Customer)
+@router.post(
+    "/{customer_id}/loyalty-points/add",
+    response_model=Customer,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN, UserType.CUSTOMER))],
+)
 async def add_loyalty_points(
     customer_id: UUID,
     points: int,
@@ -124,7 +146,11 @@ async def add_loyalty_points(
         )
 
 
-@router.post("/{customer_id}/loyalty-points/redeem", response_model=Customer)
+@router.post(
+    "/{customer_id}/loyalty-points/redeem",
+    response_model=Customer,
+    dependencies=[Depends(RequiresRole(UserType.ADMIN, UserType.CUSTOMER))],
+)
 async def redeem_loyalty_points(
     customer_id: UUID,
     points: int,
